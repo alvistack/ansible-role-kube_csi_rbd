@@ -1,0 +1,70 @@
+---
+
+# (c) Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# csi-provisioner version.
+csi_provisioner_version: "v1.2.0"
+
+# ImageRepository sets the container registry to pull images from.
+csi_provisioner_image_repository: "quay.io/k8scsi"
+
+# csi-attacher version.
+csi_attacher_version: "v1.1.1"
+
+# ImageRepository sets the container registry to pull images from.
+csi_attacher_image_repository: "quay.io/k8scsi"
+
+# csi-snapshotter version.
+csi_snapshotter_version: "v1.1.0"
+
+# ImageRepository sets the container registry to pull images from.
+csi_snapshotter_image_repository: "quay.io/k8scsi"
+
+# csi-node-drive-registrar version.
+csi_node_drive_registrar_version: "v1.1.0"
+
+# ImageRepository sets the container registry to pull images from.
+csi_node_drive_registrar_image_repository: "quay.io/k8scsi"
+
+# csi-rbdplugin version.
+csi_rbdplugin_version: "canary"
+
+# ImageRepository sets the container registry to pull images from.
+csi_rbdplugin_image_repository: "quay.io/cephcsi"
+
+# Ceph monitors.
+csi_rbd_monitors: ~
+
+# Ceph admin id.
+csi_rbd_admin_id: "admin"
+
+# Ceph admin secret.
+csi_rbd_admin_secret: ~
+
+# /etc/ceph-csi-config/config.json.
+csi_rbd_config:
+  - clusterID: "ceph"
+    monitors: "{{ csi_rbd_monitors.split(',') | select() | list() }}"
+
+# StorageClass parameters.
+csi_rbd_parameters:
+  clusterID: "ceph"
+  pool: "rbd"
+  imageFormat: "2"
+  imageFeatures: "layering"
+  csi.storage.k8s.io/provisioner-secret-name: "csi-rbd-secret"
+  csi.storage.k8s.io/provisioner-secret-namespace: "csi-rbd"
+  csi.storage.k8s.io/node-stage-secret-name: "csi-rbd-secret"
+  csi.storage.k8s.io/node-stage-secret-namespace: "csi-rbd"

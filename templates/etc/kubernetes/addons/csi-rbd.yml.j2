@@ -1,0 +1,506 @@
+---
+
+# (c) Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ceph-csi-config
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+{% if csi_rbd_config %}
+data:
+  config.json: |
+    {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
+{% endif %}
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: csi-rbd-secret
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+stringData:
+  userID: {{ csi_rbd_admin_id }}
+  userKey: {{ csi_rbd_admin_secret }}
+  adminID: {{ csi_rbd_admin_id }}
+  adminKey: {{ csi_rbd_admin_secret }}
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-rbd-provisioner
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: csi-rbd-provisioner
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "create", "delete", "update"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshots"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotcontents"]
+    verbs: ["create", "get", "list", "watch", "update", "delete"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshotclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources: ["customresourcedefinitions"]
+    verbs: ["create"]
+  - apiGroups: ["csi.storage.k8s.io"]
+    resources: ["csinodeinfos"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: csi-rbd-provisioner-role
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: EnsureExists
+subjects:
+  - kind: ServiceAccount
+    name: csi-rbd-provisioner
+    namespace: csi-rbd
+roleRef:
+  kind: ClusterRole
+  name: csi-rbd-provisioner
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: csi-rbd-provisioner
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups: [""]
+    resources: ["endpoints"]
+    verbs: ["get", "watch", "list", "delete", "update", "create"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "create", "delete", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: csi-rbd-provisioner-role-cfg
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: EnsureExists
+subjects:
+  - kind: ServiceAccount
+    name: csi-rbd-provisioner
+    namespace: csi-rbd
+roleRef:
+  kind: Role
+  name: csi-rbd-provisioner
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: csi-rbd-nodeplugin
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: csi-rbd-nodeplugin
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "update"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: csi-rbd-nodeplugin
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: EnsureExists
+subjects:
+  - kind: ServiceAccount
+    name: csi-rbd-nodeplugin
+    namespace: csi-rbd
+roleRef:
+  kind: ClusterRole
+  name: csi-rbd-nodeplugin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+provisioner: rbd.csi.ceph.com
+{% if csi_rbd_parameters %}
+parameters:
+  {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
+{%- endif %}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: csi-rbd-provisioner
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd-provisioner
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    app.kubernetes.io/name: csi-rbd-provisioner
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+  ports:
+    - name: dummy
+      port: 12345
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: csi-rbd-provisioner
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbd-provisioner
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  serviceName: csi-rbd-provisioner
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: csi-rbd-provisioner
+      app.kubernetes.io/part-of: csi-rbd
+      addonmanager.kubernetes.io/mode: Reconcile
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: csi-rbd-provisioner
+        app.kubernetes.io/part-of: csi-rbd
+        addonmanager.kubernetes.io/mode: Reconcile
+    spec:
+      serviceAccountName: csi-rbd-provisioner
+      containers:
+        - name: csi-provisioner
+          image: {{ csi_provisioner_image_repository }}/csi-provisioner:{{ csi_provisioner_version }}
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-attacher
+          image: {{ csi_attacher_image_repository }}/csi-attacher:{{ csi_attacher_version }}
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-snapshotter
+          image: {{ csi_snapshotter_image_repository }}/csi-snapshotter:{{ csi_snapshotter_version }}
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+            - --connection-timeout=15s
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-rbdplugin
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          args:
+            - --v=5
+            - --type=rbd
+            - --nodeid=$(KUBE_NODE_NAME)
+            - --endpoint=$(CSI_ENDPOINT)
+            - --drivername=rbd.csi.ceph.com
+            - --containerized=true
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+            - name: HOST_ROOTFS
+              value: /rootfs
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: host-sys
+              mountPath: /sys
+            - name: lib-modules
+              mountPath: /lib/modules
+              readOnly: true
+            - name: host-dev
+              mountPath: /dev
+            - name: ceph-csi-config
+              mountPath: /etc/ceph-csi-config
+            - mountPath: /rootfs
+              name: host-rootfs
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/rbd.csi.ceph.com
+            type: DirectoryOrCreate
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: ceph-csi-config
+          configMap:
+            name: ceph-csi-config
+        - name: host-rootfs
+          hostPath:
+            path: /
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: csi-rbdplugin
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbdplugin
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: csi-rbdplugin
+      app.kubernetes.io/part-of: csi-rbd
+      addonmanager.kubernetes.io/mode: Reconcile
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: csi-rbdplugin
+        app.kubernetes.io/part-of: csi-rbd
+        addonmanager.kubernetes.io/mode: Reconcile
+    spec:
+      serviceAccountName: csi-rbd-nodeplugin
+      hostNetwork: true
+      hostPID: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: driver-registrar
+          image: {{ csi_node_drive_registrar_image_repository }}/csi-node-driver-registrar:{{ csi_node_drive_registrar_version }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /registration/rbd.csi.ceph.com /registration/rbd.csi.ceph.com-reg.sock"]
+          args:
+            - --v=5
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/rbd.csi.ceph.com/csi.sock
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+        - name: csi-rbdplugin
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+            allowPrivilegeEscalation: true
+          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          args:
+            - --v=5
+            - --type=rbd
+            - --nodeid=$(KUBE_NODE_NAME)
+            - --endpoint=$(CSI_ENDPOINT)
+            - --drivername=rbd.csi.ceph.com
+            - --containerized=true
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+            - name: HOST_ROOTFS
+              value: /rootfs
+          volumeMounts:
+            - name: plugin-dir
+              mountPath: /csi
+            - name: plugin-mount-dir
+              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices
+              mountPropagation: Bidirectional
+            - name: pods-mount-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+            - name: host-sys
+              mountPath: /sys
+            - name: lib-modules
+              mountPath: /lib/modules
+              readOnly: true
+            - name: host-dev
+              mountPath: /dev
+            - name: ceph-csi-config
+              mountPath: /etc/ceph-csi-config
+            - name: host-rootfs
+              mountPath: /rootfs
+      volumes:
+        - name: plugin-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/rbd.csi.ceph.com
+            type: DirectoryOrCreate
+        - name: plugin-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices
+            type: DirectoryOrCreate
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+        - name: pods-mount-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: ceph-csi-config
+          configMap:
+            name: ceph-csi-config
+        - name: host-rootfs
+          hostPath:
+            path: /
