@@ -99,6 +99,17 @@
       register: result
       changed_when: result is not succeeded
 
+    - name: setup csi-rbd as default storageclass
+      shell: |
+        set -o pipefail
+        kubectl patch storageclass csi-rbd \
+          -p '{"metadata": {"annotations": {"storageclass.kubernetes.io/is-default-class": "true"}}}'
+      args:
+        executable: "/bin/bash"
+      when: ansible_hostname == groups['kube-master'][0]
+      register: result
+      changed_when: result is not succeeded
+
     - name: create pvc
       k8s:
         state: "present"
@@ -106,12 +117,35 @@
           apiVersion: v1
           kind: PersistentVolumeClaim
           metadata:
-            name: csi-rbd
+            name: root
             namespace: default
           spec:
-            storageClassName: csi-rbd
             accessModes:
               - ReadWriteOnce
             resources:
               requests:
                 storage: 100Mi
+
+    - name: create pod
+      k8s:
+        state: "present"
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: busybox
+            namespace: default
+          spec:
+            containers:
+              - name: busybox
+                image: busybox
+                command:
+                  - sleep
+                  - "3600"
+                volumeMounts:
+                  - name: root
+                    mountPath: /root
+            volumes:
+              - name: root
+                persistentVolumeClaim:
+                  claimName: root
