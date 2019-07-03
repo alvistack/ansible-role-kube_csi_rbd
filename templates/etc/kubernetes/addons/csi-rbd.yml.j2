@@ -52,8 +52,6 @@ metadata:
 stringData:
   userID: {{ csi_rbd_admin_id }}
   userKey: {{ csi_rbd_admin_secret }}
-  adminID: {{ csi_rbd_admin_id }}
-  adminKey: {{ csi_rbd_admin_secret }}
 
 ---
 apiVersion: v1
@@ -88,7 +86,7 @@ rules:
     verbs: ["list", "watch", "create", "update", "patch"]
   - apiGroups: [""]
     resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "create", "delete", "update"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "watch", "update"]
@@ -148,7 +146,7 @@ rules:
     verbs: ["get", "watch", "list", "delete", "update", "create"]
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "list", "create", "delete", "watch"]
+    verbs: ["get", "list", "watch", "create", "delete"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -192,7 +190,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
-    resources: ["configmaps"]
+    resources: ["secrets"]
     verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["nodes"]
@@ -207,7 +205,7 @@ rules:
     resources: ["volumeattachments"]
     verbs: ["get", "list", "watch", "update"]
   - apiGroups: [""]
-    resources: ["secrets"]
+    resources: ["configmaps"]
     verbs: ["get", "list"]
 
 ---
@@ -293,15 +291,12 @@ spec:
           image: {{ csi_provisioner_image_repository }}/csi-provisioner:{{ csi_provisioner_version }}
           args:
             - --v=5
-            - --csi-address=/csi/csi.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
-        - name: csi-attacher
-          image: {{ csi_attacher_image_repository }}/csi-attacher:{{ csi_attacher_version }}
-          args:
-            - --v=5
-            - --csi-address=/csi/csi.sock
+            - --csi-address=$(ADDRESS)
+            - --timeout=60s
+            - --retry-interval-start=500ms
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi-provisioner.sock
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -309,10 +304,24 @@ spec:
           image: {{ csi_snapshotter_image_repository }}/csi-snapshotter:{{ csi_snapshotter_version }}
           args:
             - --v=5
-            - --csi-address=/csi/csi.sock
-            - --connection-timeout=15s
+            - --csi-address=$(ADDRESS)
+            - --timeout=60s
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi-provisioner.sock
           securityContext:
             privileged: true
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-attacher
+          image: {{ csi_attacher_image_repository }}/csi-attacher:{{ csi_attacher_version }}
+          args:
+            - --v=5
+            - --csi-address=$(ADDRESS)
+          env:
+            - name: ADDRESS
+              value: /csi/csi-provisioner.sock
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -325,57 +334,53 @@ spec:
           args:
             - --v=5
             - --type=rbd
-            - --nodeid=$(KUBE_NODE_NAME)
+            - --nodeid=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=rbd.csi.ceph.com
             - --containerized=true
           env:
-            - name: KUBE_NODE_NAME
+            - name: HOST_ROOTFS
+              value: /rootfs
+            - name: NODE_ID
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
-              value: unix:///csi/csi.sock
-            - name: HOST_ROOTFS
-              value: /rootfs
+              value: unix:///csi/csi-provisioner.sock
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+            - name: host-dev
+              mountPath: /dev
+            - name: host-rootfs
+              mountPath: /rootfs
             - name: host-sys
               mountPath: /sys
             - name: lib-modules
               mountPath: /lib/modules
               readOnly: true
-            - name: host-dev
-              mountPath: /dev
             - name: ceph-csi-config
               mountPath: /etc/ceph-csi-config
-            - mountPath: /rootfs
-              name: host-rootfs
       volumes:
-        - name: socket-dir
+        - name: host-dev
           hostPath:
-            path: /var/lib/kubelet/plugins/rbd.csi.ceph.com
-            type: DirectoryOrCreate
+            path: /dev
+        - name: host-rootfs
+          hostPath:
+            path: /
         - name: host-sys
           hostPath:
             path: /sys
         - name: lib-modules
           hostPath:
             path: /lib/modules
-        - name: host-dev
+        - name: socket-dir
           hostPath:
-            path: /dev
+            path: /var/lib/kubelet/plugins/rbd.csi.ceph.com
+            type: DirectoryOrCreate
         - name: ceph-csi-config
           configMap:
             name: ceph-csi-config
-        - name: host-rootfs
-          hostPath:
-            path: /
 
 ---
 apiVersion: apps/v1
@@ -435,43 +440,39 @@ spec:
           args:
             - --v=5
             - --type=rbd
-            - --nodeid=$(KUBE_NODE_NAME)
+            - --nodeid=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=rbd.csi.ceph.com
             - --containerized=true
           env:
-            - name: KUBE_NODE_NAME
+            - name: HOST_ROOTFS
+              value: /rootfs
+            - name: NODE_ID
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-            - name: HOST_ROOTFS
-              value: /rootfs
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
-            - name: plugin-mount-dir
-              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices
-              mountPropagation: Bidirectional
             - name: pods-mount-dir
               mountPath: /var/lib/kubelet/pods
               mountPropagation: Bidirectional
+            - name: plugin-mount-dir
+              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices
+              mountPropagation: Bidirectional
+            - name: host-dev
+              mountPath: /dev
+            - name: host-rootfs
+              mountPath: /rootfs
             - name: host-sys
               mountPath: /sys
             - name: lib-modules
               mountPath: /lib/modules
               readOnly: true
-            - name: host-dev
-              mountPath: /dev
             - name: ceph-csi-config
               mountPath: /etc/ceph-csi-config
-            - name: host-rootfs
-              mountPath: /rootfs
       volumes:
         - name: plugin-dir
           hostPath:
@@ -489,18 +490,18 @@ spec:
           hostPath:
             path: /var/lib/kubelet/pods
             type: Directory
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-rootfs
+          hostPath:
+            path: /
         - name: host-sys
           hostPath:
             path: /sys
         - name: lib-modules
           hostPath:
             path: /lib/modules
-        - name: host-dev
-          hostPath:
-            path: /dev
         - name: ceph-csi-config
           configMap:
             name: ceph-csi-config
-        - name: host-rootfs
-          hostPath:
-            path: /
