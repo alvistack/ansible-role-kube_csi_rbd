@@ -1,8 +1,19 @@
 # Ansible Role for CSI RBD Driver on Kubernetes
 
-## 3.2.0 - TBC
+## 3.3.0 - TBC
 
 ### Major Changes
+
+## 3.2.0 - 2019-07-08
+
+### Major Changes
+
+  - Fix molecule `group_vars` with links
+  - Replace `with_items` with `loop`
+  - Replace `with_dict` with `var`
+  - Replace `with_first_found` with `lookup('first_found')`
+  - Update Vagrant test with `private_network`
+  - Reduce hardcoded `ansible_default_ipv4`
 
 ## 3.1.0 - 2019-06-27
 
