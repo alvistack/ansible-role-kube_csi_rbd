@@ -52,6 +52,8 @@ metadata:
 stringData:
   userID: {{ csi_rbd_admin_id }}
   userKey: {{ csi_rbd_admin_secret }}
+  adminID: {{ csi_rbd_admin_id }}
+  adminKey: {{ csi_rbd_admin_secret }}
 
 ---
 apiVersion: v1
@@ -80,7 +82,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list"]
+    verbs: ["get", "create", "delete"]
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["list", "watch", "create", "update", "patch"]
@@ -142,6 +144,9 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "create", "delete"]
+  - apiGroups: [""]
     resources: ["endpoints"]
     verbs: ["get", "watch", "list", "delete", "update", "create"]
   - apiGroups: [""]
@@ -191,7 +196,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list"]
+    verbs: ["get", "create", "delete"]
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "update"]
