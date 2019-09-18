@@ -68,3 +68,5 @@ csi_rbd_parameters:
   csi.storage.k8s.io/provisioner-secret-namespace: "csi-rbd"
   csi.storage.k8s.io/node-stage-secret-name: "csi-rbd-secret"
   csi.storage.k8s.io/node-stage-secret-namespace: "csi-rbd"
+  csi.storage.k8s.io/fstype: "ext4"
+  mounter: "rbd"
