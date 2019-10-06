@@ -91,6 +91,8 @@
 
   post_tasks:
     - name: kubectl version
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       command: kubectl version
       register: result
       changed_when: result is not succeeded
@@ -100,6 +102,8 @@
   become: true
   tasks:
     - name: kubeadm token create
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       shell: |
         set -o pipefail
         kubeadm token create
@@ -112,6 +116,8 @@
       ignore_errors: true
 
     - name: kubeadm join
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
         kube_apiserver_endpoint: "{{ hostvars[groups['kube-master'][0]].ansible_eth1.ipv4.address }}:6443"
         kubelet_node_ip: "{{ ansible_eth1.ipv4.address }}"
@@ -258,8 +264,10 @@
 
   post_tasks:
     - name: setup csi-rbd as default storageclass
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
-        ansible_python_interpreter: "/usr/bin/python3"
+        ansible_python_interpreter: "python3"
       k8s:
         definition:
           apiVersion: storage.k8s.io/v1
@@ -275,8 +283,10 @@
       retries: 15
 
     - name: create pvc
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
-        ansible_python_interpreter: "/usr/bin/python3"
+        ansible_python_interpreter: "python3"
       k8s:
         state: "present"
         definition:
@@ -293,8 +303,10 @@
                 storage: 100Mi
 
     - name: create pod
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
-        ansible_python_interpreter: "/usr/bin/python3"
+        ansible_python_interpreter: "python3"
       k8s:
         state: "present"
         definition:
