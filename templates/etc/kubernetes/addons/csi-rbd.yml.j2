@@ -70,19 +70,34 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: csi-rbd-provisioner
-  namespace: csi-rbd
+  name: rbd-external-provisioner-runner
   labels:
     app.kubernetes.io/name: csi-rbd
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
+aggregationRule:
+  clusterRoleSelectors:
+    - matchLabels:
+        rbac.rbd.csi.ceph.com/aggregate-to-rbd-external-provisioner-runner: "true"
+rules: []
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rbd-external-provisioner-runner-rules
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+    rbac.rbd.csi.ceph.com/aggregate-to-rbd-external-provisioner-runner: "true"
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "create", "delete"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["list", "watch", "create", "update", "patch"]
@@ -95,6 +110,12 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: ["csi.storage.k8s.io"]
+    resources: ["csinodeinfos"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update"]
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshots"]
     verbs: ["get", "list", "watch", "update"]
@@ -106,13 +127,10 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apiextensions.k8s.io"]
     resources: ["customresourcedefinitions"]
-    verbs: ["create"]
-  - apiGroups: ["csi.storage.k8s.io"]
-    resources: ["csinodeinfos"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: ["create", "list", "watch", "delete", "get", "update"]
+  - apiGroups: ["snapshot.storage.k8s.io"]
+    resources: ["volumesnapshots/status"]
+    verbs: ["update"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -129,14 +147,14 @@ subjects:
     namespace: csi-rbd
 roleRef:
   kind: ClusterRole
-  name: csi-rbd-provisioner
+  name: rbd-external-provisioner-runner
   apiGroup: rbac.authorization.k8s.io
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: csi-rbd-provisioner
+  name: rbd-external-provisioner-cfg
   namespace: csi-rbd
   labels:
     app.kubernetes.io/name: csi-rbd
@@ -144,14 +162,14 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
   - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "create", "delete"]
-  - apiGroups: [""]
     resources: ["endpoints"]
     verbs: ["get", "watch", "list", "delete", "update", "create"]
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "watch", "list", "delete", "update", "create"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -169,7 +187,7 @@ subjects:
     namespace: csi-rbd
 roleRef:
   kind: Role
-  name: csi-rbd-provisioner
+  name: rbd-external-provisioner-cfg
   apiGroup: rbac.authorization.k8s.io
 
 ---
@@ -188,15 +206,30 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: csi-rbd-nodeplugin
-  namespace: csi-rbd
   labels:
     app.kubernetes.io/name: csi-rbd
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
+aggregationRule:
+  clusterRoleSelectors:
+    - matchLabels:
+        rbac.rbd.csi.ceph.com/aggregate-to-csi-rbd-nodeplugin: "true"
+rules: []
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: csi-rbd-nodeplugin-rules
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+    rbac.rbd.csi.ceph.com/aggregate-to-csi-rbd-nodeplugin: "true"
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "create", "delete"]
+    verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "update"]
@@ -244,7 +277,7 @@ provisioner: rbd.csi.ceph.com
 {% if csi_rbd_parameters %}
 parameters:
   {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
-{%- endif %}
+{% endif %}
 
 ---
 apiVersion: v1
@@ -262,12 +295,18 @@ spec:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
   ports:
-    - name: dummy
-      port: 12345
+    - name: http-metrics
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: grpc-metrics
+      port: 8090
+      protocol: TCP
+      targetPort: 8090
 
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: csi-rbd-provisioner
   namespace: csi-rbd
@@ -276,7 +315,6 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
-  serviceName: csi-rbd-provisioner
   replicas: 1
   selector:
     matchLabels:
@@ -299,6 +337,8 @@ spec:
             - --csi-address=$(ADDRESS)
             - --timeout=60s
             - --retry-interval-start=500ms
+            - --enable-leader-election=true
+            - --leader-election-type=leases
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
@@ -311,6 +351,7 @@ spec:
             - --v=5
             - --csi-address=$(ADDRESS)
             - --timeout=60s
+            - --leader-election=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
@@ -324,6 +365,8 @@ spec:
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
+            - --leader-election=true
+            - --leader-election-type=leases
           env:
             - name: ADDRESS
               value: /csi/csi-provisioner.sock
@@ -342,14 +385,24 @@ spec:
             - --nodeid=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=rbd.csi.ceph.com
-            - --containerized=true
+            - --controllerserver=true
+            - --pidlimit=-1
+            - --metricsport=8090
+            - --metricspath=/metrics
+            - --enablegrpcmetrics=false
           env:
-            - name: HOST_ROOTFS
-              value: /rootfs
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: NODE_ID
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
               value: unix:///csi/csi-provisioner.sock
           volumeMounts:
@@ -366,6 +419,27 @@ spec:
               readOnly: true
             - name: ceph-csi-config
               mountPath: /etc/ceph-csi-config
+            - name: keys-tmp-dir
+              mountPath: /tmp/csi/keys
+        - name: liveness-prometheus
+          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          args:
+            - --type=liveness
+            - --endpoint=$(CSI_ENDPOINT)
+            - --metricsport=8080
+            - --metricspath=/metrics
+            - --polltime=60s
+            - --timeout=3s
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi-provisioner.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
       volumes:
         - name: host-dev
           hostPath:
@@ -386,6 +460,34 @@ spec:
         - name: ceph-csi-config
           configMap:
             name: ceph-csi-config
+        - name: keys-tmp-dir
+          emptyDir:
+            medium: Memory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: csi-rbdplugin
+  namespace: csi-rbd
+  labels:
+    app.kubernetes.io/name: csi-rbdplugin
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  selector:
+    app.kubernetes.io/name: csi-rbdplugin
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+  ports:
+    - name: http-metrics
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: grpc-metrics
+      port: 8090
+      protocol: TCP
+      targetPort: 8090
 
 ---
 apiVersion: apps/v1
@@ -417,21 +519,21 @@ spec:
       containers:
         - name: driver-registrar
           image: {{ csi_node_drive_registrar_image_repository }}/csi-node-driver-registrar:{{ csi_node_drive_registrar_version }}
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/rbd.csi.ceph.com /registration/rbd.csi.ceph.com-reg.sock"]
           args:
             - --v=5
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/rbd.csi.ceph.com/csi.sock
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -rf /registration/rbd.csi.ceph.com /registration/rbd.csi.ceph.com-reg.sock"]
           env:
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            - name: plugin-dir
+            - name: socket-dir
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration
@@ -448,59 +550,84 @@ spec:
             - --nodeid=$(NODE_ID)
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=rbd.csi.ceph.com
-            - --containerized=true
+            - --nodeserver=true
+            - --metricsport=8090
+            - --metricspath=/metrics
+            - --enablegrpcmetrics=false
           env:
-            - name: HOST_ROOTFS
-              value: /rootfs
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: NODE_ID
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
           volumeMounts:
-            - name: plugin-dir
+            - name: socket-dir
               mountPath: /csi
-            - name: pods-mount-dir
-              mountPath: /var/lib/kubelet/pods
-              mountPropagation: Bidirectional
-            - name: plugin-mount-dir
-              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices
-              mountPropagation: Bidirectional
             - name: host-dev
               mountPath: /dev
-            - name: host-rootfs
-              mountPath: /rootfs
             - name: host-sys
               mountPath: /sys
             - name: lib-modules
               mountPath: /lib/modules
               readOnly: true
+            - name: mountpoint-dir
+              mountPath: /var/lib/kubelet/pods
+              mountPropagation: Bidirectional
+            - name: plugin-dir
+              mountPath: /var/lib/kubelet/plugins
+              mountPropagation: Bidirectional
             - name: ceph-csi-config
               mountPath: /etc/ceph-csi-config
+            - name: keys-tmp-dir
+              mountPath: /tmp/csi/keys
+        - name: liveness-prometheus
+          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          args:
+            - --type=liveness
+            - --endpoint=$(CSI_ENDPOINT)
+            - --metricsport=8080
+            - --metricspath=/metrics
+            - --polltime=60s
+            - --timeout=3s
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
       volumes:
-        - name: plugin-dir
+        - name: socket-dir
           hostPath:
             path: /var/lib/kubelet/plugins/rbd.csi.ceph.com
             type: DirectoryOrCreate
-        - name: plugin-mount-dir
+        - name: plugin-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices
+            path: /var/lib/kubelet/plugins
             type: DirectoryOrCreate
+        - name: mountpoint-dir
+          hostPath:
+            path: /var/lib/kubelet/pods
+            type: Directory
         - name: registration-dir
           hostPath:
             path: /var/lib/kubelet/plugins_registry
             type: Directory
-        - name: pods-mount-dir
-          hostPath:
-            path: /var/lib/kubelet/pods
-            type: Directory
         - name: host-dev
           hostPath:
             path: /dev
-        - name: host-rootfs
-          hostPath:
-            path: /
         - name: host-sys
           hostPath:
             path: /sys
@@ -510,3 +637,6 @@ spec:
         - name: ceph-csi-config
           configMap:
             name: ceph-csi-config
+        - name: keys-tmp-dir
+          emptyDir:
+            medium: Memory

@@ -21,25 +21,25 @@ csi_provisioner_version: "v1.3.0"
 csi_provisioner_image_repository: "quay.io/k8scsi"
 
 # csi-attacher version.
-csi_attacher_version: "v1.2.0"
+csi_attacher_version: "v1.2.1"
 
 # ImageRepository sets the container registry to pull images from.
 csi_attacher_image_repository: "quay.io/k8scsi"
 
 # csi-snapshotter version.
-csi_snapshotter_version: "v1.2.0"
+csi_snapshotter_version: "v1.2.1"
 
 # ImageRepository sets the container registry to pull images from.
 csi_snapshotter_image_repository: "quay.io/k8scsi"
 
 # csi-node-drive-registrar version.
-csi_node_drive_registrar_version: "v1.1.0"
+csi_node_drive_registrar_version: "v1.2.0"
 
 # ImageRepository sets the container registry to pull images from.
 csi_node_drive_registrar_image_repository: "quay.io/k8scsi"
 
 # csi-rbdplugin version.
-csi_rbdplugin_version: "canary"
+csi_rbdplugin_version: "v1.2.1"
 
 # ImageRepository sets the container registry to pull images from.
 csi_rbdplugin_image_repository: "quay.io/cephcsi"
