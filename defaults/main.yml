@@ -27,7 +27,7 @@ csi_attacher_version: "v1.2.1"
 csi_attacher_image_repository: "quay.io/k8scsi"
 
 # csi-snapshotter version.
-csi_snapshotter_version: "v1.2.1"
+csi_snapshotter_version: "v1.2.2"
 
 # ImageRepository sets the container registry to pull images from.
 csi_snapshotter_image_repository: "quay.io/k8scsi"
