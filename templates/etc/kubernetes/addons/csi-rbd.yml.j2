@@ -422,8 +422,6 @@ spec:
               mountPath: /csi
             - name: host-dev
               mountPath: /dev
-            - name: host-rootfs
-              mountPath: /rootfs
             - name: host-sys
               mountPath: /sys
             - name: lib-modules
@@ -456,9 +454,6 @@ spec:
         - name: host-dev
           hostPath:
             path: /dev
-        - name: host-rootfs
-          hostPath:
-            path: /
         - name: host-sys
           hostPath:
             path: /sys
