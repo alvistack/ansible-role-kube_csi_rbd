@@ -62,7 +62,6 @@ csi_rbd_config:
 csi_rbd_parameters:
   clusterID: "ceph"
   pool: "rbd"
-  imageFormat: "2"
   imageFeatures: "layering"
   csi.storage.k8s.io/provisioner-secret-name: "csi-rbd-secret"
   csi.storage.k8s.io/provisioner-secret-namespace: "csi-rbd"
