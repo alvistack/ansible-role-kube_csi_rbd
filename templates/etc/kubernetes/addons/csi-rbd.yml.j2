@@ -298,7 +298,7 @@ spec:
     - name: http-metrics
       port: 8080
       protocol: TCP
-      targetPort: 8080
+      targetPort: 8068
     - name: grpc-metrics
       port: 8090
       protocol: TCP
@@ -335,13 +335,17 @@ spec:
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
-            - --timeout=60s
+            - --timeout=150s
             - --retry-interval-start=500ms
             - --enable-leader-election=true
             - --leader-election-type=leases
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -350,11 +354,15 @@ spec:
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
-            - --timeout=60s
+            - --timeout=150s
             - --leader-election=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
           securityContext:
             privileged: true
           volumeMounts:
@@ -370,6 +378,10 @@ spec:
           env:
             - name: ADDRESS
               value: /csi/csi-provisioner.sock
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -410,8 +422,6 @@ spec:
               mountPath: /csi
             - name: host-dev
               mountPath: /dev
-            - name: host-rootfs
-              mountPath: /rootfs
             - name: host-sys
               mountPath: /sys
             - name: lib-modules
@@ -426,7 +436,7 @@ spec:
           args:
             - --type=liveness
             - --endpoint=$(CSI_ENDPOINT)
-            - --metricsport=8080
+            - --metricsport=8068
             - --metricspath=/metrics
             - --polltime=60s
             - --timeout=3s
@@ -444,9 +454,6 @@ spec:
         - name: host-dev
           hostPath:
             path: /dev
-        - name: host-rootfs
-          hostPath:
-            path: /
         - name: host-sys
           hostPath:
             path: /sys
@@ -483,7 +490,7 @@ spec:
     - name: http-metrics
       port: 8080
       protocol: TCP
-      targetPort: 8080
+      targetPort: 8068
     - name: grpc-metrics
       port: 8090
       protocol: TCP
@@ -528,6 +535,10 @@ spec:
               exec:
                 command: ["/bin/sh", "-c", "rm -rf /registration/rbd.csi.ceph.com /registration/rbd.csi.ceph.com-reg.sock"]
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -594,7 +605,7 @@ spec:
           args:
             - --type=liveness
             - --endpoint=$(CSI_ENDPOINT)
-            - --metricsport=8080
+            - --metricsport=8068
             - --metricspath=/metrics
             - --polltime=60s
             - --timeout=3s

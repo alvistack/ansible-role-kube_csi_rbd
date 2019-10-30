@@ -21,7 +21,7 @@ csi_provisioner_version: "v1.4.0"
 csi_provisioner_image_repository: "quay.io/k8scsi"
 
 # csi-attacher version.
-csi_attacher_version: "v2.0.0"
+csi_attacher_version: "v1.2.1"
 
 # ImageRepository sets the container registry to pull images from.
 csi_attacher_image_repository: "quay.io/k8scsi"
@@ -62,7 +62,6 @@ csi_rbd_config:
 csi_rbd_parameters:
   clusterID: "ceph"
   pool: "rbd"
-  imageFormat: "2"
   imageFeatures: "layering"
   csi.storage.k8s.io/provisioner-secret-name: "csi-rbd-secret"
   csi.storage.k8s.io/provisioner-secret-namespace: "csi-rbd"
