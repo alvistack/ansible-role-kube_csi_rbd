@@ -298,7 +298,7 @@ spec:
     - name: http-metrics
       port: 8080
       protocol: TCP
-      targetPort: 8068
+      targetPort: 8680
     - name: grpc-metrics
       port: 8090
       protocol: TCP
@@ -436,7 +436,7 @@ spec:
           args:
             - --type=liveness
             - --endpoint=$(CSI_ENDPOINT)
-            - --metricsport=8068
+            - --metricsport=8680
             - --metricspath=/metrics
             - --polltime=60s
             - --timeout=3s
@@ -490,7 +490,7 @@ spec:
     - name: http-metrics
       port: 8080
       protocol: TCP
-      targetPort: 8068
+      targetPort: 8680
     - name: grpc-metrics
       port: 8090
       protocol: TCP
@@ -605,7 +605,7 @@ spec:
           args:
             - --type=liveness
             - --endpoint=$(CSI_ENDPOINT)
-            - --metricsport=8068
+            - --metricsport=8680
             - --metricspath=/metrics
             - --polltime=60s
             - --timeout=3s
@@ -631,11 +631,11 @@ spec:
         - name: mountpoint-dir
           hostPath:
             path: /var/lib/kubelet/pods
-            type: Directory
+            type: DirectoryOrCreate
         - name: registration-dir
           hostPath:
             path: /var/lib/kubelet/plugins_registry
-            type: Directory
+            type: DirectoryOrCreate
         - name: host-dev
           hostPath:
             path: /dev

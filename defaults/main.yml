@@ -39,7 +39,7 @@ csi_node_drive_registrar_version: "v1.2.0"
 csi_node_drive_registrar_image_repository: "quay.io/k8scsi"
 
 # csi-rbdplugin version.
-csi_rbdplugin_version: "v1.2.1"
+csi_rbdplugin_version: "v1.2.2"
 
 # ImageRepository sets the container registry to pull images from.
 csi_rbdplugin_image_repository: "quay.io/cephcsi"
