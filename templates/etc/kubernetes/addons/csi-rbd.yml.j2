@@ -388,19 +388,6 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
-        - name: csi-resizer
-          image: {{ csi_resizer_image_repository }}/csi-resizer:{{ csi_resizer_version }}
-          args:
-            - --v=5
-            - --csi-address=$(ADDRESS)
-            - --csiTimeout=150s
-            - --leader-election=true
-          env:
-            - name: ADDRESS
-              value: unix:///csi/csi-provisioner.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
         - name: csi-rbdplugin
           securityContext:
             privileged: true
