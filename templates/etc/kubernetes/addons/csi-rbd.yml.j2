@@ -115,7 +115,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: ["storage.k8s.io"]
     resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: ["get", "list", "watch", "update", "patch"]
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshots"]
     verbs: ["get", "list", "watch", "update"]
@@ -377,7 +377,6 @@ spec:
             - --v=5
             - --csi-address=$(ADDRESS)
             - --leader-election=true
-            - --leader-election-type=leases
           env:
             - name: ADDRESS
               value: /csi/csi-provisioner.sock
