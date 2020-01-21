@@ -45,7 +45,7 @@ csi_resizer_version: "v0.4.0"
 csi_resizer_image_repository: "quay.io/k8scsi"
 
 # csi-rbdplugin version.
-csi_rbdplugin_version: "v1.2.2"
+csi_rbdplugin_version: "v2.0.0"
 
 # ImageRepository sets the container registry to pull images from.
 csi_rbdplugin_image_repository: "quay.io/cephcsi"
