@@ -24,7 +24,7 @@
     - role: kubernetes-cni
     - role: kubectl
 
-- hosts: kube-master
+- hosts: all
   remote_user: root
   become: true
   roles:
@@ -34,18 +34,18 @@
     - role: kubernetes-flannel
       flannel_iface: "eth1"
 
-- hosts: ceph-mon
+- hosts: all
   remote_user: root
   become: true
   roles:
     - role: ceph-common
-      ceph_fsid: "{{ hostvars[groups['ceph-mon'][0]].ansible_machine_id | to_uuid }}"
+      ceph_fsid: "{{ hostvars[groups['all'][0]].ansible_machine_id | to_uuid }}"
       ceph_mon_initial_members: >-
-        {%- for host in groups['ceph-mon'] -%}
+        {%- for host in groups['all'] -%}
         {{ host }},
         {%- endfor -%}
       ceph_mon_host: >-
-        {%- for host in groups['ceph-mon'] -%}
+        {%- for host in groups['all'] -%}
         {{ hostvars[host].ansible_eth1.ipv4.address }},
         {%- endfor -%}
       ceph_public_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
@@ -117,7 +117,7 @@
       changed_when: false
       ignore_errors: true
 
-- hosts: kube-master
+- hosts: all
   remote_user: root
   become: true
   pre_tasks:
@@ -127,14 +127,14 @@
         ceph auth get-key client.admin
       args:
         executable: "/bin/bash"
-      delegate_to: "{{ groups['ceph-mon'][0] }}"
+      delegate_to: "{{ groups['all'][0] }}"
       register: ceph_client_admin_result
       changed_when: ceph_client_admin_result is not succeeded
 
   roles:
     - role: kubernetes-csi-rbd
       csi_rbd_monitors: >-
-        {%- for host in groups['ceph-mon'] -%}
+        {%- for host in groups['all'] -%}
         {{ hostvars[host].ansible_eth1.ipv4.address }}:6789,
         {%- endfor -%}
       csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
@@ -154,7 +154,7 @@
             annotations:
               storageclass.kubernetes.io/is-default-class: "true"
         state: present
-      when: ansible_hostname == groups['kube-master'][0]
+      when: ansible_hostname == groups['all'][0]
       register: result
       until: result is succeeded
       retries: 30
