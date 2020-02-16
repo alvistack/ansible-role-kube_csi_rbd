@@ -24,27 +24,14 @@
     - role: kubernetes_cni
     - role: kubectl
     - role: minikube
-      kubelet_node_ip: "{{ ansible_eth1.ipv4.address }}"
     - role: kubernetes_addon_manager
     - role: kubernetes_flannel
-      flannel_iface: "eth1"
 
 - hosts: all
   remote_user: root
   become: true
   roles:
     - role: ceph_common
-      ceph_fsid: "{{ hostvars[groups['all'][0]].ansible_machine_id | to_uuid }}"
-      ceph_mon_initial_members: >-
-        {%- for host in groups['all'] -%}
-        {{ host }},
-        {%- endfor -%}
-      ceph_mon_host: >-
-        {%- for host in groups['all'] -%}
-        {{ hostvars[host].ansible_eth1.ipv4.address }},
-        {%- endfor -%}
-      ceph_public_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
-      ceph_cluster_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
     - role: ceph_mon
     - role: ceph_mgr
     - role: ceph_osd
@@ -67,10 +54,6 @@
 
   roles:
     - role: kubernetes_csi_rbd
-      csi_rbd_monitors: >-
-        {%- for host in groups['all'] -%}
-        {{ hostvars[host].ansible_eth1.ipv4.address }}:6789,
-        {%- endfor -%}
       csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
 
   post_tasks:
