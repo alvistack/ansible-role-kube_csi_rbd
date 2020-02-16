@@ -21,19 +21,19 @@
     - role: bootstrap
     - role: python
     - role: docker
-    - role: kubernetes-cni
+    - role: kubernetes_cni
     - role: kubectl
     - role: minikube
       kubelet_node_ip: "{{ ansible_eth1.ipv4.address }}"
-    - role: kubernetes-addon-manager
-    - role: kubernetes-flannel
+    - role: kubernetes_addon_manager
+    - role: kubernetes_flannel
       flannel_iface: "eth1"
 
 - hosts: all
   remote_user: root
   become: true
   roles:
-    - role: ceph-common
+    - role: ceph_common
       ceph_fsid: "{{ hostvars[groups['all'][0]].ansible_machine_id | to_uuid }}"
       ceph_mon_initial_members: >-
         {%- for host in groups['all'] -%}
@@ -45,11 +45,11 @@
         {%- endfor -%}
       ceph_public_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
       ceph_cluster_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
-    - role: ceph-mon
-    - role: ceph-mgr
-    - role: ceph-osd
-    - role: ceph-mds
-    - role: ceph-rgw
+    - role: ceph_mon
+    - role: ceph_mgr
+    - role: ceph_osd
+    - role: ceph_mds
+    - role: ceph_rgw
 
 - hosts: all
   remote_user: root
@@ -66,7 +66,7 @@
       changed_when: ceph_client_admin_result is not succeeded
 
   roles:
-    - role: kubernetes-csi-rbd
+    - role: kubernetes_csi_rbd
       csi_rbd_monitors: >-
         {%- for host in groups['all'] -%}
         {{ hostvars[host].ansible_eth1.ipv4.address }}:6789,
