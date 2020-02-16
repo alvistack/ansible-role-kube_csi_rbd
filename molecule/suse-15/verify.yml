@@ -78,25 +78,6 @@
       changed_when: false
       ignore_errors: true
 
-    - name: setup csi-rbd as default storageclass
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-      vars:
-        ansible_python_interpreter: "python3"
-      k8s:
-        definition:
-          apiVersion: storage.k8s.io/v1
-          kind: StorageClass
-          metadata:
-            name: csi-rbd
-            annotations:
-              storageclass.kubernetes.io/is-default-class: "true"
-        state: present
-      when: ansible_hostname == groups['all'][0]
-      register: result
-      until: result is succeeded
-      retries: 30
-
     - name: create pvc
       environment:
         PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
