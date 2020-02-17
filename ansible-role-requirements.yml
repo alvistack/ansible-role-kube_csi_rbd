@@ -18,28 +18,28 @@
   src: https://github.com/alvistack/ansible-role-bootstrap
   version: develop
 
-- name: ceph-common
-  src: https://github.com/alvistack/ansible-role-ceph-common
+- name: ceph_common
+  src: https://github.com/alvistack/ansible-role-ceph_common
   version: develop
 
-- name: ceph-mon
-  src: https://github.com/alvistack/ansible-role-ceph-mon
+- name: ceph_mon
+  src: https://github.com/alvistack/ansible-role-ceph_mon
   version: develop
 
-- name: ceph-mgr
-  src: https://github.com/alvistack/ansible-role-ceph-mgr
+- name: ceph_mgr
+  src: https://github.com/alvistack/ansible-role-ceph_mgr
   version: develop
 
-- name: ceph-osd
-  src: https://github.com/alvistack/ansible-role-ceph-osd
+- name: ceph_osd
+  src: https://github.com/alvistack/ansible-role-ceph_osd
   version: develop
 
-- name: ceph-mds
-  src: https://github.com/alvistack/ansible-role-ceph-mds
+- name: ceph_mds
+  src: https://github.com/alvistack/ansible-role-ceph_mds
   version: develop
 
-- name: ceph-rgw
-  src: https://github.com/alvistack/ansible-role-ceph-rgw
+- name: ceph_rgw
+  src: https://github.com/alvistack/ansible-role-ceph_rgw
   version: develop
 
 - name: docker
@@ -50,16 +50,16 @@
   src: https://github.com/alvistack/ansible-role-kubectl
   version: develop
 
-- name: kubernetes-addon-manager
-  src: https://github.com/alvistack/ansible-role-kubernetes-addon-manager
+- name: kubernetes_addon_manager
+  src: https://github.com/alvistack/ansible-role-kubernetes_addon_manager
   version: develop
 
-- name: kubernetes-cni
-  src: https://github.com/alvistack/ansible-role-kubernetes-cni
+- name: kubernetes_cni
+  src: https://github.com/alvistack/ansible-role-kubernetes_cni
   version: develop
 
-- name: kubernetes-flannel
-  src: https://github.com/alvistack/ansible-role-kubernetes-flannel
+- name: kubernetes_flannel
+  src: https://github.com/alvistack/ansible-role-kubernetes_flannel
   version: develop
 
 - name: minikube
