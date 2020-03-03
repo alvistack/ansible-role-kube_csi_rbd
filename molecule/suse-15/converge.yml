@@ -17,31 +17,57 @@
 - hosts: all
   remote_user: root
   become: true
-  roles:
-    - role: bootstrap
-    - role: python
-    - role: docker
-    - role: cni_plugins
-    - role: kubectl
-    - role: minikube
-    - role: kubernetes_addon_manager
-    - role: kubernetes_flannel
+  tasks:
+    - include_role:
+        name: bootstrap
+
+    - include_role:
+        name: python
+
+    - include_role:
+        name: docker
+
+    - include_role:
+        name: cni_plugins
+
+    - include_role:
+        name: kubectl
+
+    - include_role:
+        name: minikube
+
+    - include_role:
+        name: kubernetes_addon_manager
+
+    - include_role:
+        name: kubernetes_flannel
 
 - hosts: all
   remote_user: root
   become: true
-  roles:
-    - role: ceph_common
-    - role: ceph_mon
-    - role: ceph_mgr
-    - role: ceph_osd
-    - role: ceph_mds
-    - role: ceph_rgw
+  tasks:
+    - include_role:
+        name: ceph_common
+
+    - include_role:
+        name: ceph_mon
+
+    - include_role:
+        name: ceph_mgr
+
+    - include_role:
+        name: ceph_osd
+
+    - include_role:
+        name: ceph_mds
+
+    - include_role:
+        name: ceph_rgw
 
 - hosts: all
   remote_user: root
   become: true
-  pre_tasks:
+  tasks:
     - name: fetch ceph client.admin key
       shell: |
         set -o pipefail
@@ -52,11 +78,11 @@
       register: ceph_client_admin_result
       changed_when: ceph_client_admin_result is not succeeded
 
-  roles:
-    - role: kubernetes_csi_rbd
-      csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
+    - include_role:
+        name: kubernetes_csi_rbd
+      vars:
+        csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
 
-  post_tasks:
     - name: setup csi-rbd as default storageclass
       environment:
         PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
