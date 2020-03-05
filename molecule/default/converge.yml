@@ -1,0 +1,103 @@
+---
+
+# (c) Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+- hosts: all
+  remote_user: root
+  become: true
+  tasks:
+    - include_role:
+        name: bootstrap
+
+    - include_role:
+        name: python
+
+    - include_role:
+        name: docker
+
+    - include_role:
+        name: cni_plugins
+
+    - include_role:
+        name: kubectl
+
+    - include_role:
+        name: minikube
+
+    - include_role:
+        name: kubernetes_addon_manager
+
+    - include_role:
+        name: kubernetes_flannel
+
+- hosts: all
+  remote_user: root
+  become: true
+  tasks:
+    - include_role:
+        name: ceph_common
+
+    - include_role:
+        name: ceph_mon
+
+    - include_role:
+        name: ceph_mgr
+
+    - include_role:
+        name: ceph_osd
+
+    - include_role:
+        name: ceph_mds
+
+    - include_role:
+        name: ceph_rgw
+
+- hosts: all
+  remote_user: root
+  become: true
+  tasks:
+    - name: fetch ceph client.admin key
+      shell: |
+        set -o pipefail
+        ceph auth get-key client.admin
+      args:
+        executable: "/bin/bash"
+      delegate_to: "{{ groups['all'][0] }}"
+      register: ceph_client_admin_result
+      changed_when: ceph_client_admin_result is not succeeded
+
+    - include_role:
+        name: kubernetes_csi_rbd
+      vars:
+        csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
+
+    - name: setup csi-rbd as default storageclass
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      vars:
+        ansible_python_interpreter: "python3"
+      k8s:
+        definition:
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: csi-rbd
+            annotations:
+              storageclass.kubernetes.io/is-default-class: "true"
+        state: present
+      when: ansible_hostname == groups['all'][0]
+      register: result
+      until: result is succeeded
+      retries: 30
