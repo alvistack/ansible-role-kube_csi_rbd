@@ -20,17 +20,17 @@ flannel_iface: "eth1"
 
 ceph_fsid: "{{ hostvars[groups['all'][0]].ansible_machine_id | to_uuid }}"
 ceph_mon_initial_members: >-
-  {%- set _list = [] -%}
+  {%- set _params = [] -%}
   {%- for host in groups['all'] -%}
-  {%-   set _list = _list.append(host) -%}
+  {%-   set _params = _params.append(host) -%}
   {%- endfor -%}
-  {{ _list | join(',') }}
+  {{ _params | join(',') }}
 ceph_mon_host: >-
-  {%- set _list = [] -%}
+  {%- set _params = [] -%}
   {%- for host in groups['all'] -%}
-  {%-   set _list = _list.append(hostvars[host].ansible_eth1.ipv4.address) -%}
+  {%-   set _params = _params.append(hostvars[host].ansible_eth1.ipv4.address) -%}
   {%- endfor -%}
-  {{ _list | join(',') }}
+  {{ _params | join(',') }}
 ceph_public_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
 ceph_cluster_network: "{{ (ansible_eth1.ipv4.network + '/' + ansible_eth1.ipv4.netmask) | ipaddr('net') }}"
 
@@ -38,8 +38,8 @@ ceph_volume:
   - { objectstore: "bluestore", data: "/dev/vdb" }
 
 csi_rbd_monitors: >-
-  {%- set _list = [] -%}
+  {%- set _params = [] -%}
   {%- for host in groups['all'] -%}
-  {%-   set _list = _list.append(hostvars[host].ansible_eth1.ipv4.address + ":6789") -%}
+  {%-   set _params = _params.append(hostvars[host].ansible_eth1.ipv4.address + ":6789") -%}
   {%- endfor -%}
-  {{ _list | join(',') }}
+  {{ _params | join(',') }}
