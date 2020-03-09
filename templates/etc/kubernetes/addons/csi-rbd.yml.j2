@@ -280,7 +280,7 @@ provisioner: rbd.csi.ceph.com
 {% if csi_rbd_parameters %}
 parameters:
   {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
-{% endif %}
+{%- endif %}
 
 ---
 apiVersion: v1
