@@ -37,7 +37,7 @@ metadata:
 data:
   config.json: |
     {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
-{%- endif %}
+{% endif %}
 
 ---
 apiVersion: v1
