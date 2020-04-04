@@ -32,6 +32,14 @@ platforms:
       - 'disk_bus = "sata"'
       - 'volume_cache = "none"'
       - 'storage :file, bus: "sata", cache: "none"'
+    groups:
+      - etcd
+      - kube_master
+      - ceph_mon
+      - ceph_mgr
+      - ceph_osd
+      - ceph_mds
+      - ceph_rgw
 lint: |
   set -ex
   yamllint .
