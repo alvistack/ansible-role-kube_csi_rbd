@@ -110,12 +110,12 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["csi.storage.k8s.io"]
-    resources: ["csinodeinfos"]
-    verbs: ["get", "list", "watch"]
   - apiGroups: ["storage.k8s.io"]
     resources: ["volumeattachments"]
     verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["csi.storage.k8s.io"]
+    resources: ["csinodes"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshots"]
     verbs: ["get", "list", "watch", "update"]
@@ -164,9 +164,6 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
-  - apiGroups: [""]
-    resources: ["endpoints"]
-    verbs: ["get", "watch", "list", "delete", "update", "create"]
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "list", "watch", "create", "delete"]
@@ -231,23 +228,8 @@ metadata:
     rbac.rbd.csi.ceph.com/aggregate-to-csi-rbd-nodeplugin: "true"
 rules:
   - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "list"]
-  - apiGroups: [""]
     resources: ["nodes"]
-    verbs: ["get", "list", "update"]
-  - apiGroups: [""]
-    resources: ["namespaces"]
-    verbs: ["get", "list"]
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list"]
+    verbs: ["get"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -302,10 +284,6 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8680
-    - name: grpc-metrics
-      port: 8090
-      protocol: TCP
-      targetPort: 8090
 
 ---
 apiVersion: apps/v1
@@ -342,6 +320,7 @@ spec:
             - --retry-interval-start=500ms
             - --enable-leader-election=true
             - --leader-election-type=leases
+            - --feature-gates=Topology=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
@@ -418,9 +397,6 @@ spec:
             - --drivername=rbd.csi.ceph.com
             - --controllerserver=true
             - --pidlimit=-1
-            - --metricsport=8090
-            - --metricspath=/metrics
-            - --enablegrpcmetrics=false
           env:
             - name: POD_IP
               valueFrom:
@@ -509,10 +485,6 @@ spec:
       port: 8080
       protocol: TCP
       targetPort: 8680
-    - name: grpc-metrics
-      port: 8090
-      protocol: TCP
-      targetPort: 8090
 
 ---
 apiVersion: apps/v1
@@ -582,9 +554,6 @@ spec:
             - --endpoint=$(CSI_ENDPOINT)
             - --drivername=rbd.csi.ceph.com
             - --nodeserver=true
-            - --metricsport=8090
-            - --metricspath=/metrics
-            - --enablegrpcmetrics=false
           env:
             - name: POD_IP
               valueFrom:
