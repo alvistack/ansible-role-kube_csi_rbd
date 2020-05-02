@@ -37,7 +37,7 @@ metadata:
 data:
   config.json: |
     {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
-{% endif %}
+{% endif -%}
 
 ---
 apiVersion: v1
@@ -262,7 +262,7 @@ provisioner: rbd.csi.ceph.com
 {% if csi_rbd_parameters %}
 parameters:
   {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
-{%- endif %}
+{% endif -%}
 
 ---
 apiVersion: v1
