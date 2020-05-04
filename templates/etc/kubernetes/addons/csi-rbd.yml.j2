@@ -33,11 +33,11 @@ metadata:
     app.kubernetes.io/name: csi-rbd
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
-{% if csi_rbd_config %}
+{% if csi_rbd_config -%}
 data:
   config.json: |
     {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
-{% endif -%}
+{%- endif %}
 
 ---
 apiVersion: v1
@@ -259,10 +259,10 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 provisioner: rbd.csi.ceph.com
-{% if csi_rbd_parameters %}
+{% if csi_rbd_parameters -%}
 parameters:
   {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
-{% endif -%}
+{%- endif %}
 
 ---
 apiVersion: v1
