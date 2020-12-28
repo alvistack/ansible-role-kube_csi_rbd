@@ -51,7 +51,13 @@ csi_rbdplugin_version: "v2.1.2"
 csi_rbdplugin_image_repository: "quay.io/cephcsi"
 
 # Ceph monitors.
-csi_rbd_monitors: ~
+csi_rbd_monitors: >-
+  {%- set _ns = namespace() -%}
+  {%- set _ns._params = [] -%}
+  {%- for host in groups['ceph_mon'] -%}
+  {%-   set _ns._params = _ns._params + [hostvars[host].ansible_default_ipv4.address + ":6789"] -%}
+  {%- endfor -%}
+  {{ _ns._params | join(',') }}
 
 # Ceph admin id.
 csi_rbd_admin_id: "admin"
