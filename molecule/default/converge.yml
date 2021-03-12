@@ -18,39 +18,48 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: cni_plugins
       tags: cni_plugins
 
-    - include_role:
+    - name: include role
+      include_role:
         name: cri_tools
       tags: cri_tools
 
-    - include_role:
+    - name: include role
+      include_role:
         name: containers_common
       tags: containers_common
 
-    - include_role:
+    - name: include role
+      include_role:
         name: crun
       tags: crun
 
-    - include_role:
+    - name: include role
+      include_role:
         name: conmon
       tags: conmon
 
-    - include_role:
+    - name: include role
+      include_role:
         name: cri_o
       tags: cri_o
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kubectl
       tags: kubectl
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kubeadm
       tags: kubeadm
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kubelet
       tags: kubelet
 
@@ -58,7 +67,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: etcd
       tags: etcd
 
@@ -183,15 +193,18 @@
       changed_when: base64_decode_result is not succeeded
       tags: kube_master
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kube_master
       tags: kube_master
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kubernetes_addon_manager
       tags: kubernetes_addon_manager
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kubernetes_weave
       tags: kubernetes_weave
 
@@ -199,7 +212,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_common
       tags: ceph_common
 
@@ -207,7 +221,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_mon
       tags: ceph_mon
 
@@ -215,7 +230,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_mgr
       tags: ceph_mgr
 
@@ -223,7 +239,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_osd
       tags: ceph_osd
 
@@ -231,7 +248,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_mds
       tags: ceph_mds
 
@@ -239,7 +257,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_rgw
       tags: ceph_rgw
 
@@ -247,7 +266,8 @@
   remote_user: root
   become: true
   tasks:
-    - include_role:
+    - name: include role
+      include_role:
         name: ceph_common
       tags: ceph_common
 
@@ -266,7 +286,8 @@
       changed_when: ceph_client_admin_result is not succeeded
       tags: kubernetes_csi_rbd
 
-    - include_role:
+    - name: include role
+      include_role:
         name: kubernetes_csi_rbd
       vars:
         csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
