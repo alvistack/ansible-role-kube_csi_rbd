@@ -313,6 +313,7 @@ spec:
       containers:
         - name: csi-provisioner
           image: {{ csi_provisioner_image_repository }}/csi-provisioner:{{ csi_provisioner_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
@@ -333,6 +334,7 @@ spec:
               mountPath: /csi
         - name: csi-snapshotter
           image: {{ csi_snapshotter_image_repository }}/csi-snapshotter:{{ csi_snapshotter_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
@@ -352,6 +354,7 @@ spec:
               mountPath: /csi
         - name: csi-attacher
           image: {{ csi_attacher_image_repository }}/csi-attacher:{{ csi_attacher_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
@@ -368,6 +371,7 @@ spec:
               mountPath: /csi
         - name: csi-resizer
           image: {{ csi_resizer_image_repository }}/csi-resizer:{{ csi_resizer_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
@@ -389,6 +393,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
           image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --type=rbd
@@ -428,6 +433,7 @@ spec:
               mountPath: /tmp/csi/keys
         - name: liveness-prometheus
           image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
             - --endpoint=$(CSI_ENDPOINT)
@@ -518,6 +524,7 @@ spec:
           securityContext:
             privileged: true
           image: {{ csi_node_drive_registrar_image_repository }}/csi-node-driver-registrar:{{ csi_node_drive_registrar_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=/csi/csi.sock
@@ -547,6 +554,7 @@ spec:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
           image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --type=rbd
@@ -595,6 +603,7 @@ spec:
           securityContext:
             privileged: true
           image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
             - --endpoint=$(CSI_ENDPOINT)
