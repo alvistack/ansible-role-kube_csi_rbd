@@ -15,16 +15,35 @@
 # limitations under the License.
 
 driver:
-  name: delegated
-  options:
-    managed: false
-    ansible_connection_options:
-      ansible_connection: local
+  name: vagrant
+  provider:
+    name: libvirt
 platforms:
-  - name: localhost
+  - name: ${MOLECULE_INSTANCE_NAME}-1
+    box: alvistack/kubernetes-1.21
+    cpu: 2
+    memory: 4096
+    provider_raw_config_args:
+      - "disk_bus = 'virtio'"
+      - "nic_model_type = 'virtio'"
+      - "video_type = 'virtio'"
+      - "disk_driver :cache => 'writeback'"
+      - "storage :file, bus: 'virtio', cache: 'writeback'"
     groups:
       - etcd
       - kube_master
+  - name: ${MOLECULE_INSTANCE_NAME}-2
+    box: alvistack/ceph-16.2
+    cpu: 2
+    memory: 4096
+    provider_raw_config_args:
+      - "disk_bus = 'virtio'"
+      - "nic_model_type = 'virtio'"
+      - "video_type = 'virtio'"
+      - "disk_driver :cache => 'writeback'"
+      - "storage :file, bus: 'virtio', cache: 'writeback'"
+    groups:
+      - ceph_mon
 lint: |
   set -euxo pipefail
   yamllint .
