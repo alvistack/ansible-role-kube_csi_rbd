@@ -18,6 +18,29 @@
   remote_user: root
   become: true
   tasks:
+    - name: kubectl version
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      command: kubectl version
+      register: result
+      changed_when: result is not succeeded
+
+    - name: kubectl get pod --all-namespaces
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      shell: |
+        set -euxo pipefail
+        kubectl get pod --all-namespaces | egrep -e 'csi-rbd\s+csi-rbd-provisioner-\S+\s+6\/6\s+Running'
+      args:
+        executable: "/bin/bash"
+      loop: "{{ ansible_play_hosts }}"
+      delegate_to: "{{ item }}"
+      run_once: true
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
+
     - name: setup csi-rbd as default storageclass
       environment:
         PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -35,7 +58,7 @@
       when: inventory_hostname == groups['kube_master'][0]
       register: result
       until: result is succeeded
-      retries: 15
+      retries: 60
 
     - name: create pvc
       environment:
@@ -84,3 +107,19 @@
               - name: root
                 persistentVolumeClaim:
                   claimName: root
+    
+    - name: kubectl get pod --all-namespaces
+      environment:
+        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      shell: |
+        set -euxo pipefail
+        kubectl get pod --all-namespaces | egrep -e 'default\s+busybox\s+1\/1\s+Running'
+      args:
+        executable: "/bin/bash"
+      loop: "{{ ansible_play_hosts }}"
+      delegate_to: "{{ item }}"
+      run_once: true
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
