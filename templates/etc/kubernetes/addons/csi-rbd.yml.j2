@@ -79,7 +79,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["list", "watch", "create", "update", "patch"]
@@ -116,6 +116,9 @@ rules:
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshotcontents/status"]
     verbs: ["update"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -196,6 +199,12 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -214,6 +223,19 @@ roleRef:
   kind: ClusterRole
   name: csi-rbd-nodeplugin
   apiGroup: rbac.authorization.k8s.io
+
+---
+apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: rbd.csi.ceph.com
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  attachRequired: true
+  podInfoOnMount: false
 
 ---
 apiVersion: storage.k8s.io/v1
@@ -284,6 +306,7 @@ spec:
                       - csi-rbdplugin-provisioner
               topologyKey: "kubernetes.io/hostname"
       serviceAccountName: csi-rbd-provisioner
+      priorityClassName: system-cluster-critical
       containers:
         - name: csi-provisioner
           image: k8s.gcr.io/sig-storage/csi-provisioner:v2.0.4
@@ -296,6 +319,7 @@ spec:
             - --leader-election=true
             - --feature-gates=Topology=false
             - --default-fstype=ext4
+            - --extra-create-metadata=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
@@ -303,7 +327,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-snapshotter
-          image: k8s.gcr.io/sig-storage/csi-snapshotter:v3.0.2
+          image: k8s.gcr.io/sig-storage/csi-snapshotter:v4.0.0
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -353,7 +377,7 @@ spec:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
-          image: quay.io/cephcsi/cephcsi:v3.2.2
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -395,7 +419,7 @@ spec:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
-          image: quay.io/cephcsi/cephcsi:v3.2.2
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           args:
             - --type=controller
             - --v=5
@@ -413,7 +437,7 @@ spec:
             - name: keys-tmp-dir
               mountPath: /tmp/csi/keys
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.2.2
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -497,6 +521,7 @@ spec:
         addonmanager.kubernetes.io/mode: Reconcile
     spec:
       serviceAccountName: csi-rbd-nodeplugin
+      priorityClassName: system-node-critical
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -526,7 +551,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.2.2
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -571,7 +596,7 @@ spec:
         - name: liveness-prometheus
           securityContext:
             privileged: true
-          image: quay.io/cephcsi/cephcsi:v3.2.2
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
