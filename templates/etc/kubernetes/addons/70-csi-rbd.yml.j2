@@ -33,11 +33,9 @@ metadata:
     app.kubernetes.io/name: csi-rbd
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
-{% if csi_rbd_config -%}
 data:
   config.json: |
     {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
-{%- endif %}
 
 ---
 apiVersion: v1
@@ -75,29 +73,13 @@ metadata:
     app.kubernetes.io/name: csi-rbd
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
-aggregationRule:
-  clusterRoleSelectors:
-    - matchLabels:
-        rbac.rbd.csi.ceph.com/aggregate-to-rbd-external-provisioner-runner: "true"
-rules: []
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: rbd-external-provisioner-runner-rules
-  labels:
-    app.kubernetes.io/name: csi-rbd
-    app.kubernetes.io/part-of: csi-rbd
-    addonmanager.kubernetes.io/mode: Reconcile
-    rbac.rbd.csi.ceph.com/aggregate-to-rbd-external-provisioner-runner: "true"
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["get", "list"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["list", "watch", "create", "update", "patch"]
@@ -107,33 +89,36 @@ rules:
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "watch", "update"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims/status"]
+    verbs: ["update", "patch"]
   - apiGroups: ["storage.k8s.io"]
     resources: ["storageclasses"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update", "patch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["csinodes"]
-    verbs: ["get", "list", "watch"]
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshots"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: ["get", "list"]
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshotcontents"]
     verbs: ["create", "get", "list", "watch", "update", "delete"]
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshotclasses"]
     verbs: ["get", "list", "watch"]
-  - apiGroups: ["apiextensions.k8s.io"]
-    resources: ["customresourcedefinitions"]
-    verbs: ["create", "list", "watch", "delete", "get", "update"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments/status"]
+    verbs: ["patch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["csinodes"]
+    verbs: ["get", "list", "watch"]
   - apiGroups: ["snapshot.storage.k8s.io"]
-    resources: ["volumesnapshots/status"]
+    resources: ["volumesnapshotcontents/status"]
     verbs: ["update"]
   - apiGroups: [""]
-    resources: ["persistentvolumeclaims/status"]
-    verbs: ["update", "patch"]
+    resources: ["configmaps"]
+    verbs: ["get"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -166,7 +151,7 @@ metadata:
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
-    verbs: ["get", "list", "watch", "create", "delete"]
+    verbs: ["get", "list", "watch", "create", "update", "delete"]
   - apiGroups: ["coordination.k8s.io"]
     resources: ["leases"]
     verbs: ["get", "watch", "list", "delete", "update", "create"]
@@ -210,25 +195,15 @@ metadata:
     app.kubernetes.io/name: csi-rbd
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
-aggregationRule:
-  clusterRoleSelectors:
-    - matchLabels:
-        rbac.rbd.csi.ceph.com/aggregate-to-csi-rbd-nodeplugin: "true"
-rules: []
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: csi-rbd-nodeplugin-rules
-  labels:
-    app.kubernetes.io/name: csi-rbd
-    app.kubernetes.io/part-of: csi-rbd
-    addonmanager.kubernetes.io/mode: Reconcile
-    rbac.rbd.csi.ceph.com/aggregate-to-csi-rbd-nodeplugin: "true"
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["configmaps"]
     verbs: ["get"]
 
 ---
@@ -251,6 +226,19 @@ roleRef:
 
 ---
 apiVersion: storage.k8s.io/v1
+kind: CSIDriver
+metadata:
+  name: rbd.csi.ceph.com
+  labels:
+    app.kubernetes.io/name: csi-rbd
+    app.kubernetes.io/part-of: csi-rbd
+    addonmanager.kubernetes.io/mode: Reconcile
+spec:
+  attachRequired: true
+  podInfoOnMount: false
+
+---
+apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: csi-rbd
@@ -259,10 +247,8 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 provisioner: rbd.csi.ceph.com
-{% if csi_rbd_parameters -%}
 parameters:
   {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
-{%- endif %}
 
 ---
 apiVersion: v1
@@ -309,81 +295,80 @@ spec:
         app.kubernetes.io/part-of: csi-rbd
         addonmanager.kubernetes.io/mode: Reconcile
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - csi-rbdplugin-provisioner
+              topologyKey: "kubernetes.io/hostname"
       serviceAccountName: csi-rbd-provisioner
+      priorityClassName: system-cluster-critical
       containers:
         - name: csi-provisioner
-          image: {{ csi_provisioner_image_repository }}/csi-provisioner:{{ csi_provisioner_version }}
+          image: k8s.gcr.io/sig-storage/csi-provisioner:v2.0.4
           imagePullPolicy: IfNotPresent
           args:
-            - --v=5
             - --csi-address=$(ADDRESS)
+            - --v=5
             - --timeout=150s
             - --retry-interval-start=500ms
-            - --enable-leader-election=true
-            - --leader-election-type=leases
-            - --feature-gates=Topology=true
+            - --leader-election=true
+            - --feature-gates=Topology=false
+            - --default-fstype=ext4
+            - --extra-create-metadata=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
         - name: csi-snapshotter
-          image: {{ csi_snapshotter_image_repository }}/csi-snapshotter:{{ csi_snapshotter_version }}
+          image: k8s.gcr.io/sig-storage/csi-snapshotter:v4.0.0
           imagePullPolicy: IfNotPresent
           args:
-            - --v=5
             - --csi-address=$(ADDRESS)
+            - --v=5
             - --timeout=150s
             - --leader-election=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
           securityContext:
             privileged: true
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
         - name: csi-attacher
-          image: {{ csi_attacher_image_repository }}/csi-attacher:{{ csi_attacher_version }}
+          image: k8s.gcr.io/sig-storage/csi-attacher:v3.0.2
           imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=$(ADDRESS)
             - --leader-election=true
+            - --retry-interval-start=500ms
           env:
             - name: ADDRESS
               value: /csi/csi-provisioner.sock
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: {{ csi_resizer_image_repository }}/csi-resizer:{{ csi_resizer_version }}
+          image: k8s.gcr.io/sig-storage/csi-resizer:v1.0.1
           imagePullPolicy: IfNotPresent
           args:
-            - --v=5
             - --csi-address=$(ADDRESS)
-            - --csiTimeout=150s
+            - --v=5
+            - --timeout=150s
             - --leader-election
+            - --retry-interval-start=500ms
+            - --handle-volume-inuse-error=false
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -392,16 +377,18 @@ spec:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
-          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
-            - --v=5
-            - --type=rbd
             - --nodeid=$(NODE_ID)
-            - --endpoint=$(CSI_ENDPOINT)
-            - --drivername=rbd.csi.ceph.com
+            - --type=rbd
             - --controllerserver=true
+            - --endpoint=$(CSI_ENDPOINT)
+            - --v=5
+            - --drivername=rbd.csi.ceph.com
             - --pidlimit=-1
+            - --rbdhardmaxclonedepth=8
+            - --rbdsoftmaxclonedepth=4
           env:
             - name: POD_IP
               valueFrom:
@@ -411,10 +398,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
               value: unix:///csi/csi-provisioner.sock
           volumeMounts:
@@ -431,8 +414,30 @@ spec:
               mountPath: /etc/ceph-csi-config
             - name: keys-tmp-dir
               mountPath: /tmp/csi/keys
+        - name: csi-rbdplugin-controller
+          securityContext:
+            privileged: true
+            capabilities:
+              add: ["SYS_ADMIN"]
+          image: quay.io/cephcsi/cephcsi:v3.3.1
+          args:
+            - --type=controller
+            - --v=5
+            - --drivername=rbd.csi.ceph.com
+            - --drivernamespace=$(DRIVER_NAMESPACE)
+          env:
+            - name: DRIVER_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: ceph-csi-config
+              mountPath: /etc/ceph-csi-config/
+            - name: keys-tmp-dir
+              mountPath: /tmp/csi/keys
         - name: liveness-prometheus
-          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -442,12 +447,12 @@ spec:
             - --polltime=60s
             - --timeout=3s
           env:
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi-provisioner.sock
             - name: POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: CSI_ENDPOINT
-              value: unix:///csi/csi-provisioner.sock
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -516,6 +521,7 @@ spec:
         addonmanager.kubernetes.io/mode: Reconcile
     spec:
       serviceAccountName: csi-rbd-nodeplugin
+      priorityClassName: system-node-critical
       hostNetwork: true
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -523,21 +529,13 @@ spec:
         - name: driver-registrar
           securityContext:
             privileged: true
-          image: {{ csi_node_drive_registrar_image_repository }}/csi-node-driver-registrar:{{ csi_node_drive_registrar_version }}
+          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1
           imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/rbd.csi.ceph.com/csi.sock
-          lifecycle:
-            preStop:
-              exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/rbd.csi.ceph.com /registration/rbd.csi.ceph.com-reg.sock"]
           env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -553,15 +551,15 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
-            - --v=5
-            - --type=rbd
             - --nodeid=$(NODE_ID)
-            - --endpoint=$(CSI_ENDPOINT)
-            - --drivername=rbd.csi.ceph.com
+            - --type=rbd
             - --nodeserver=true
+            - --endpoint=$(CSI_ENDPOINT)
+            - --v=5
+            - --drivername=rbd.csi.ceph.com
           env:
             - name: POD_IP
               valueFrom:
@@ -571,10 +569,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
           volumeMounts:
@@ -602,7 +596,7 @@ spec:
         - name: liveness-prometheus
           securityContext:
             privileged: true
-          image: {{ csi_rbdplugin_image_repository }}/cephcsi:{{ csi_rbdplugin_version }}
+          image: quay.io/cephcsi/cephcsi:v3.3.1
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -612,12 +606,12 @@ spec:
             - --polltime=60s
             - --timeout=3s
           env:
+            - name: CSI_ENDPOINT
+              value: unix:///csi/csi.sock
             - name: POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: CSI_ENDPOINT
-              value: unix:///csi/csi.sock
           volumeMounts:
             - name: socket-dir
               mountPath: /csi

@@ -30,7 +30,7 @@
         PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       shell: |
         set -euxo pipefail
-        kubectl get pod --all-namespaces | egrep -e 'csi-rbd\s+csi-rbd-provisioner-\S+\s+6\/6\s+Running'
+        kubectl get pod --all-namespaces | egrep -e 'csi-rbd\s+csi-rbd-provisioner-\S+\s+[0-9]+\/[0-9]+\s+Running'
       args:
         executable: "/bin/bash"
       loop: "{{ ansible_play_hosts }}"
@@ -113,7 +113,7 @@
         PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       shell: |
         set -euxo pipefail
-        kubectl get pod --all-namespaces | egrep -e 'default\s+busybox\s+1\/1\s+Running'
+        kubectl get pod --all-namespaces | egrep -e 'default\s+busybox\s+[0-9]+\/[0-9]+\s+Running'
       args:
         executable: "/bin/bash"
       loop: "{{ ansible_play_hosts }}"
