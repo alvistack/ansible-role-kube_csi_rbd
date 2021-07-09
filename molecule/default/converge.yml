@@ -22,10 +22,10 @@
   remote_user: root
   become: true
   tasks:
-    - name: ceph health
+    - name: ceph health detail
       shell: |
         set -euxo pipefail
-        ceph health | grep 'HEALTH_OK'
+        ceph health detail | grep 'HEALTH_OK'
       args:
         executable: "/bin/bash"
       loop: "{{ ansible_play_hosts }}"
