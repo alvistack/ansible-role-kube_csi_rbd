@@ -48,10 +48,10 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 stringData:
-  userID: {{ csi_rbd_admin_id }}
-  userKey: {{ csi_rbd_admin_secret }}
-  adminID: {{ csi_rbd_admin_id }}
-  adminKey: {{ csi_rbd_admin_secret }}
+  userID: {{ kube_csi_rbd_admin_id }}
+  userKey: {{ kube_csi_rbd_admin_secret }}
+  adminID: {{ kube_csi_rbd_admin_id }}
+  adminKey: {{ kube_csi_rbd_admin_secret }}
 
 ---
 apiVersion: v1
