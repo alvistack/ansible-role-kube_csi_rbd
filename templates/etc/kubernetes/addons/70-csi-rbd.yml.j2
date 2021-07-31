@@ -35,7 +35,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 data:
   config.json: |
-    {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
+    {{ kube_csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
 
 ---
 apiVersion: v1
@@ -248,7 +248,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 provisioner: rbd.csi.ceph.com
 parameters:
-  {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
+  {{ kube_csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
 
 ---
 apiVersion: v1
