@@ -79,6 +79,10 @@
             resources:
               requests:
                 storage: 100Mi
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      until: result is succeeded
+      retries: 60
 
     - name: create pod
       environment:
@@ -107,6 +111,10 @@
               - name: root
                 persistentVolumeClaim:
                   claimName: root
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      until: result is succeeded
+      retries: 60
     
     - name: kubectl get pod --all-namespaces
       environment:
