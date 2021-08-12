@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # Ceph monitors.
-csi_rbd_monitors: >-
+kube_csi_rbd_monitors: >-
   {%- set _ns = namespace() -%}
   {%- set _ns._params = [] -%}
   {%- for host in groups['ceph_mon'] -%}
@@ -24,18 +24,18 @@ csi_rbd_monitors: >-
   {{ _ns._params | join(',') }}
 
 # Ceph admin id.
-csi_rbd_admin_id: "admin"
+kube_csi_rbd_admin_id: "admin"
 
 # Ceph admin secret.
-csi_rbd_admin_secret: ~
+kube_csi_rbd_admin_secret: ~
 
 # /etc/ceph-csi-config/config.json.
-csi_rbd_config:
+kube_csi_rbd_config:
   - clusterID: "ceph"
-    monitors: "{{ csi_rbd_monitors.split(',') | select() | list() }}"
+    monitors: "{{ kube_csi_rbd_monitors.split(',') | select() | list() }}"
 
 # StorageClass parameters.
-csi_rbd_parameters:
+kube_csi_rbd_parameters:
   clusterID: "ceph"
   pool: "rbd"
   imageFeatures: "layering"

@@ -35,7 +35,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 data:
   config.json: |
-    {{ csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
+    {{ kube_csi_rbd_config | to_nice_json(indent=4) | indent(4) }}
 
 ---
 apiVersion: v1
@@ -48,10 +48,10 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 stringData:
-  userID: {{ csi_rbd_admin_id }}
-  userKey: {{ csi_rbd_admin_secret }}
-  adminID: {{ csi_rbd_admin_id }}
-  adminKey: {{ csi_rbd_admin_secret }}
+  userID: {{ kube_csi_rbd_admin_id }}
+  userKey: {{ kube_csi_rbd_admin_secret }}
+  adminID: {{ kube_csi_rbd_admin_id }}
+  adminKey: {{ kube_csi_rbd_admin_secret }}
 
 ---
 apiVersion: v1
@@ -118,6 +118,9 @@ rules:
     verbs: ["update"]
   - apiGroups: [""]
     resources: ["configmaps"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
     verbs: ["get"]
 
 ---
@@ -205,6 +208,15 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["persistentvolumes"]
+    verbs: ["get"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["volumeattachments"]
+    verbs: ["list", "get"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -248,7 +260,7 @@ metadata:
     addonmanager.kubernetes.io/mode: Reconcile
 provisioner: rbd.csi.ceph.com
 parameters:
-  {{ csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
+  {{ kube_csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
 
 ---
 apiVersion: v1
@@ -309,7 +321,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: csi-provisioner
-          image: k8s.gcr.io/sig-storage/csi-provisioner:v2.0.4
+          image: k8s.gcr.io/sig-storage/csi-provisioner:v2.2.2
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -327,7 +339,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-snapshotter
-          image: k8s.gcr.io/sig-storage/csi-snapshotter:v4.0.0
+          image: k8s.gcr.io/sig-storage/csi-snapshotter:v4.1.1
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -343,7 +355,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-attacher
-          image: k8s.gcr.io/sig-storage/csi-attacher:v3.0.2
+          image: k8s.gcr.io/sig-storage/csi-attacher:v3.2.1
           imagePullPolicy: IfNotPresent
           args:
             - --v=5
@@ -357,7 +369,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: k8s.gcr.io/sig-storage/csi-resizer:v1.0.1
+          image: k8s.gcr.io/sig-storage/csi-resizer:v1.2.0
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -377,7 +389,7 @@ spec:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
-          image: quay.io/cephcsi/cephcsi:v3.3.1
+          image: quay.io/cephcsi/cephcsi:v3.4.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -389,6 +401,7 @@ spec:
             - --pidlimit=-1
             - --rbdhardmaxclonedepth=8
             - --rbdsoftmaxclonedepth=4
+            - --enableprofiling=false
           env:
             - name: POD_IP
               valueFrom:
@@ -419,7 +432,7 @@ spec:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
-          image: quay.io/cephcsi/cephcsi:v3.3.1
+          image: quay.io/cephcsi/cephcsi:v3.4.0
           args:
             - --type=controller
             - --v=5
@@ -437,7 +450,7 @@ spec:
             - name: keys-tmp-dir
               mountPath: /tmp/csi/keys
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.3.1
+          image: quay.io/cephcsi/cephcsi:v3.4.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -529,7 +542,7 @@ spec:
         - name: driver-registrar
           securityContext:
             privileged: true
-          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.0.1
+          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.2.0
           imagePullPolicy: IfNotPresent
           args:
             - --v=5
@@ -551,15 +564,18 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.3.1
+          image: quay.io/cephcsi/cephcsi:v3.4.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
+            - --pluginpath=/var/lib/kubelet/plugins
+            - --stagingpath=/var/lib/kubelet/plugins/kubernetes.io/csi/pv/
             - --type=rbd
             - --nodeserver=true
             - --endpoint=$(CSI_ENDPOINT)
             - --v=5
             - --drivername=rbd.csi.ceph.com
+            - --enableprofiling=false
           env:
             - name: POD_IP
               valueFrom:
@@ -596,7 +612,7 @@ spec:
         - name: liveness-prometheus
           securityContext:
             privileged: true
-          image: quay.io/cephcsi/cephcsi:v3.3.1
+          image: quay.io/cephcsi/cephcsi:v3.4.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
