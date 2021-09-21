@@ -1,5 +1,7 @@
 # Ansible Role for CSI RBD Driver on Kubernetes
 
+<img src="/alvistack.svg" width="75" alt="AlviStack">
+
 [![Gitlab pipeline status](https://img.shields.io/gitlab/pipeline/alvistack/ansible-role-kube_csi_rbd/master)](https://gitlab.com/alvistack/ansible-role-kube_csi_rbd/-/pipelines)
 [![GitHub release](https://img.shields.io/github/release/alvistack/ansible-role-kube_csi_rbd.svg)](https://github.com/alvistack/ansible-role-kube_csi_rbd/releases)
 [![GitHub license](https://img.shields.io/github/license/alvistack/ansible-role-kube_csi_rbd.svg)](https://github.com/alvistack/ansible-role-kube_csi_rbd/blob/master/LICENSE)
