@@ -19,15 +19,11 @@
   become: true
   tasks:
     - name: kubectl version
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       command: kubectl version
       register: result
       changed_when: result is not succeeded
 
     - name: kubectl get pod --all-namespaces
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       shell: |
         set -euxo pipefail
         kubectl get pod --all-namespaces | egrep -e 'csi-rbd\s+csi-rbd-provisioner-\S+\s+[0-9]+\/[0-9]+\s+Running'
@@ -42,8 +38,6 @@
       retries: 60
 
     - name: setup csi-rbd as default storageclass
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
         ansible_python_interpreter: "python3"
       community.kubernetes.k8s:
@@ -61,8 +55,6 @@
       retries: 60
 
     - name: create pvc
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
         ansible_python_interpreter: "python3"
       community.kubernetes.k8s:
@@ -85,8 +77,6 @@
       retries: 60
 
     - name: create pod
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       vars:
         ansible_python_interpreter: "python3"
       community.kubernetes.k8s:
@@ -117,8 +107,6 @@
       retries: 60
     
     - name: kubectl get pod --all-namespaces
-      environment:
-        PATH: "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
       shell: |
         set -euxo pipefail
         kubectl get pod --all-namespaces | egrep -e 'default\s+busybox\s+[0-9]+\/[0-9]+\s+Running'
