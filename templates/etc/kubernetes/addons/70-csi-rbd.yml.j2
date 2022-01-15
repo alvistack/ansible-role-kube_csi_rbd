@@ -281,10 +281,6 @@ metadata:
 provisioner: rbd.csi.ceph.com
 parameters:
   {{ kube_csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
-reclaimPolicy: Delete
-allowVolumeExpansion: true
-mountOptions:
-  - discard
 
 ---
 apiVersion: v1
