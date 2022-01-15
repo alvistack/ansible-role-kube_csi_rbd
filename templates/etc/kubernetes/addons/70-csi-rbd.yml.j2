@@ -27,6 +27,26 @@ metadata:
 apiVersion: v1
 kind: ConfigMap
 metadata:
+  name: ceph-config
+  namespace: csi-cephfs
+  labels:
+    app.kubernetes.io/name: csi-cephfs
+    app.kubernetes.io/part-of: csi-cephfs
+    addonmanager.kubernetes.io/mode: Reconcile
+data:
+  ceph.conf: |
+    [global]
+    auth_cluster_required = cephx
+    auth_service_required = cephx
+    auth_client_required = cephx
+    fuse_set_user_groups = false
+    fuse_big_writes = true
+  keyring: |
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
   name: ceph-csi-config
   namespace: csi-rbd
   labels:
@@ -261,6 +281,10 @@ metadata:
 provisioner: rbd.csi.ceph.com
 parameters:
   {{ kube_csi_rbd_parameters | to_nice_yaml(indent=2) | indent(2) }}
+reclaimPolicy: Delete
+allowVolumeExpansion: true
+mountOptions:
+  - discard
 
 ---
 apiVersion: v1
@@ -409,7 +433,7 @@ spec:
             - name: POD_NAMESPACE
               valueFrom:
                 fieldRef:
-                  fieldPath: metadata.namespace                  
+                  fieldPath: metadata.namespace
             - name: CSI_ENDPOINT
               value: unix:///csi/csi-provisioner.sock
             - name: CSI_ADDONS_ENDPOINT
