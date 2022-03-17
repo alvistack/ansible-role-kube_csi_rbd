@@ -23,7 +23,7 @@
   become: true
   tasks:
     - name: ceph health detail
-      shell: |
+      ansible.builtin.shell: |
         set -euxo pipefail
         ceph health detail | grep 'HEALTH_OK'
       args:
@@ -41,7 +41,7 @@
   become: true
   tasks:
     - name: kubectl get --raw='/readyz?verbose'
-      shell: |
+      ansible.builtin.shell: |
         set -euxo pipefail
         kubectl get --raw='/readyz?verbose' | grep 'check passed'
       args:
@@ -55,17 +55,17 @@
       retries: 60
 
     - name: include role
-      include_role:
+      ansible.builtin.include_role:
         name: kube_addon_manager
       tags: kube_addon_manager
 
     - name: include role
-      include_role:
+      ansible.builtin.include_role:
         name: ceph_common
       tags: ceph_common
 
     - name: fetch ceph client.admin key
-      shell: |
+      ansible.builtin.shell: |
         set -euxo pipefail
         ceph auth get-key client.admin
       args:
@@ -76,7 +76,7 @@
       tags: kube_csi_rbd
 
     - name: include role
-      include_role:
+      ansible.builtin.include_role:
         name: kube_csi_rbd
       vars:
         kube_csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
