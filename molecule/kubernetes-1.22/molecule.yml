@@ -34,7 +34,7 @@ platforms:
       - etcd
       - kube_master
   - name: ${MOLECULE_INSTANCE_NAME}-2
-    box: alvistack/ceph-16.2
+    box: alvistack/ceph-17.2
     cpu: 2
     memory: 8192
     provider_raw_config_args:
