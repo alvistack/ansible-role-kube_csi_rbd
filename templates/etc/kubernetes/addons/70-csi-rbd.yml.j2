@@ -344,7 +344,11 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: csi-provisioner
-          image: k8s.gcr.io/sig-storage/csi-provisioner:v3.1.0
+          # TODO: replace with released image version.
+          # Canary image is being to be used to test pvc-pvc clone
+          # with differe sc feature.
+          # see: https://github.com/kubernetes-csi/external-provisioner/pull/699
+          image: gcr.io/k8s-staging-sig-storage/csi-provisioner:canary
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -406,7 +410,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-rbdplugin
-          image: quay.io/cephcsi/cephcsi:v3.6.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -457,7 +461,7 @@ spec:
               mountPath: /run/secrets/tokens
               readOnly: true
         - name: csi-rbdplugin-controller
-          image: quay.io/cephcsi/cephcsi:v3.6.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           args:
             - --type=controller
             - --v=5
@@ -477,7 +481,7 @@ spec:
             - name: ceph-config
               mountPath: /etc/ceph
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.6.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -579,6 +583,7 @@ spec:
         - name: driver-registrar
           securityContext:
             privileged: true
+            allowPrivilegeEscalation: true
           image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.4.0
           imagePullPolicy: IfNotPresent
           args:
@@ -601,7 +606,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.6.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -666,7 +671,8 @@ spec:
         - name: liveness-prometheus
           securityContext:
             privileged: true
-          image: quay.io/cephcsi/cephcsi:v3.6.0
+            allowPrivilegeEscalation: true
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
