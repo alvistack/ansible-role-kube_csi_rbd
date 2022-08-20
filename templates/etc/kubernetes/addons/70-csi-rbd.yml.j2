@@ -145,9 +145,6 @@ rules:
   - apiGroups: [""]
     resources: ["serviceaccounts"]
     verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts/token"]
-    verbs: ["create"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -243,9 +240,6 @@ rules:
   - apiGroups: ["storage.k8s.io"]
     resources: ["volumeattachments"]
     verbs: ["list", "get"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts/token"]
-    verbs: ["create"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -350,17 +344,19 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: csi-provisioner
-          image: registry.k8s.io/sig-storage/csi-provisioner:v3.2.1
+          # TODO: replace with released image version.
+          # Canary image is being to be used to test pvc-pvc clone
+          # with differe sc feature.
+          # see: https://github.com/kubernetes-csi/external-provisioner/pull/699
+          image: gcr.io/k8s-staging-sig-storage/csi-provisioner:canary
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
-            - --v=1
+            - --v=5
             - --timeout=150s
             - --retry-interval-start=500ms
             - --leader-election=true
             - --feature-gates=Topology=false
-            - --feature-gates=HonorPVReclaimPolicy=true
-            - --prevent-volume-mode-conversion=true
             - --default-fstype=ext4
             - --extra-create-metadata=true
           env:
@@ -370,14 +366,13 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-snapshotter
-          image: registry.k8s.io/sig-storage/csi-snapshotter:v6.0.1
+          image: k8s.gcr.io/sig-storage/csi-snapshotter:v5.0.1
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
-            - --v=1
+            - --v=5
             - --timeout=150s
             - --leader-election=true
-            - --extra-create-metadata=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
@@ -385,10 +380,10 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-attacher
-          image: registry.k8s.io/sig-storage/csi-attacher:v3.5.0
+          image: k8s.gcr.io/sig-storage/csi-attacher:v3.4.0
           imagePullPolicy: IfNotPresent
           args:
-            - --v=1
+            - --v=5
             - --csi-address=$(ADDRESS)
             - --leader-election=true
             - --retry-interval-start=500ms
@@ -399,16 +394,15 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: registry.k8s.io/sig-storage/csi-resizer:v1.5.0
+          image: k8s.gcr.io/sig-storage/csi-resizer:v1.4.0
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
-            - --v=1
+            - --v=5
             - --timeout=150s
             - --leader-election
             - --retry-interval-start=500ms
             - --handle-volume-inuse-error=false
-            - --feature-gates=RecoverVolumeExpansionFailure=true
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
@@ -416,7 +410,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-rbdplugin
-          image: quay.io/cephcsi/cephcsi:v3.7.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -430,7 +424,6 @@ spec:
             - --rbdhardmaxclonedepth=8
             - --rbdsoftmaxclonedepth=4
             - --enableprofiling=false
-            - --setmetadata=true
           env:
             - name: POD_IP
               valueFrom:
@@ -468,13 +461,12 @@ spec:
               mountPath: /run/secrets/tokens
               readOnly: true
         - name: csi-rbdplugin-controller
-          image: quay.io/cephcsi/cephcsi:v3.7.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           args:
             - --type=controller
             - --v=5
             - --drivername=rbd.csi.ceph.com
             - --drivernamespace=$(DRIVER_NAMESPACE)
-            - --setmetadata=true
           env:
             - name: DRIVER_NAMESPACE
               valueFrom:
@@ -489,7 +481,7 @@ spec:
             - name: ceph-config
               mountPath: /etc/ceph
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.7.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -592,10 +584,10 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.5.1
+          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.4.0
           imagePullPolicy: IfNotPresent
           args:
-            - --v=1
+            - --v=5
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=/var/lib/kubelet/plugins/rbd.csi.ceph.com/csi.sock
           env:
@@ -614,12 +606,12 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.7.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
             - --pluginpath=/var/lib/kubelet/plugins
-            - --stagingpath=/var/lib/kubelet/plugins/kubernetes.io/csi/
+            - --stagingpath=/var/lib/kubelet/plugins/kubernetes.io/csi/pv/
             - --type=rbd
             - --nodeserver=true
             - --endpoint=$(CSI_ENDPOINT)
@@ -680,7 +672,7 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.7.0
+          image: quay.io/cephcsi/cephcsi:v3.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
