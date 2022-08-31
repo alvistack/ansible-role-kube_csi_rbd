@@ -14,11 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-- hosts: all
+- name: converge | all
+  hosts: all
   remote_user: root
   become: true
 
-- hosts: ceph_mon
+- name: converge | ceph_mon
+  hosts: ceph_mon
   remote_user: root
   become: true
   tasks:
@@ -36,7 +38,8 @@
       until: result is succeeded
       retries: 60
 
-- hosts: kube_master
+- name: converge | kube_master
+  hosts: kube_master
   remote_user: root
   become: true
   tasks:
