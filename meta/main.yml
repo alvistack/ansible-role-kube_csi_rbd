@@ -17,6 +17,7 @@
 galaxy_info:
   standalone: true
   role_name: kube_csi_rbd
+  namespace: alvistack
   author: "Wong Hoi Sing Edison <hswong3i@pantarei-design.com>"
   description: Ansible Role for CSI RBD Driver on Kubernetes Installation
   company: PantaRei Design
