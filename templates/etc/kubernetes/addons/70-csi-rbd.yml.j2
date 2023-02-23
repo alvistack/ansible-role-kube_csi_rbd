@@ -350,7 +350,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: csi-provisioner
-          image: registry.k8s.io/sig-storage/csi-provisioner:v3.2.1
+          image: registry.k8s.io/sig-storage/csi-provisioner:v3.3.0
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -370,7 +370,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-snapshotter
-          image: registry.k8s.io/sig-storage/csi-snapshotter:v6.0.1
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v6.1.0
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -385,13 +385,14 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-attacher
-          image: registry.k8s.io/sig-storage/csi-attacher:v3.5.0
+          image: registry.k8s.io/sig-storage/csi-attacher:v4.0.0
           imagePullPolicy: IfNotPresent
           args:
             - --v=1
             - --csi-address=$(ADDRESS)
             - --leader-election=true
             - --retry-interval-start=500ms
+            - --default-fstype=ext4
           env:
             - name: ADDRESS
               value: /csi/csi-provisioner.sock
@@ -399,7 +400,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-resizer
-          image: registry.k8s.io/sig-storage/csi-resizer:v1.5.0
+          image: registry.k8s.io/sig-storage/csi-resizer:v1.6.0
           imagePullPolicy: IfNotPresent
           args:
             - --csi-address=$(ADDRESS)
@@ -416,7 +417,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-rbdplugin
-          image: quay.io/cephcsi/cephcsi:v3.7.2
+          image: quay.io/cephcsi/cephcsi:v3.8.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -468,7 +469,7 @@ spec:
               mountPath: /run/secrets/tokens
               readOnly: true
         - name: csi-rbdplugin-controller
-          image: quay.io/cephcsi/cephcsi:v3.7.2
+          image: quay.io/cephcsi/cephcsi:v3.8.0
           args:
             - --type=controller
             - --v=5
@@ -489,7 +490,7 @@ spec:
             - name: ceph-config
               mountPath: /etc/ceph
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.7.2
+          image: quay.io/cephcsi/cephcsi:v3.8.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -592,7 +593,7 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.5.1
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.6.2
           imagePullPolicy: IfNotPresent
           args:
             - --v=1
@@ -614,7 +615,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.7.2
+          image: quay.io/cephcsi/cephcsi:v3.8.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -680,7 +681,7 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.7.2
+          image: quay.io/cephcsi/cephcsi:v3.8.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -707,7 +708,7 @@ spec:
         - name: plugin-dir
           hostPath:
             path: /var/lib/kubelet/plugins
-            type: DirectoryOrCreate
+            type: Directory
         - name: mountpoint-dir
           hostPath:
             path: /var/lib/kubelet/pods
@@ -719,7 +720,7 @@ spec:
         - name: registration-dir
           hostPath:
             path: /var/lib/kubelet/plugins_registry
-            type: DirectoryOrCreate
+            type: Directory
         - name: host-dev
           hostPath:
             path: /dev
