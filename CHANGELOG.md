@@ -1,6 +1,10 @@
 # Ansible Role for CSI RBD Driver on Kubernetes
 
-## 8.3.0 - TBC
+## 8.4.0 - TBC
+
+### Major Changes
+
+## 8.3.0 - 2023-08-15
 
 ### Major Changes
 
