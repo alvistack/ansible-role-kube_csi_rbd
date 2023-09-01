@@ -4,6 +4,7 @@
 
 ### Major Changes
 
+-   Support Ceph 18.2 Reef
 -   Remove Kubernetes 1.25 support
 -   Support Kubernetes 1.28
 
