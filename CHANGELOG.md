@@ -1,9 +1,14 @@
 # Ansible Role for CSI RBD Driver on Kubernetes
 
-## 8.4.0 - TBC
+## 8.5.0 - TBC
 
 ### Major Changes
 
+## 8.4.0 - 2023-09-14
+
+### Major Changes
+
+-   Support Ansible community package 8.4.0
 -   Support Ceph 18.2 Reef
 -   Remove Kubernetes 1.25 support
 -   Support Kubernetes 1.28
