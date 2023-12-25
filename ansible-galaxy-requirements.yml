@@ -28,6 +28,10 @@ roles:
     src: https://github.com/alvistack/ansible-role-kube_addon_manager
     version: develop
 
+  - name: alvistack.kube_flannel
+    src: https://github.com/alvistack/ansible-role-kube_flannel
+    version: develop
+
   - name: alvistack.ceph_common
     src: https://github.com/alvistack/ansible-role-ceph_common
     version: develop

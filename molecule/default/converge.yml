@@ -55,15 +55,23 @@
       until: result is succeeded
       retries: 60
 
+    - name: kubectl version --output=yaml
+      ansible.builtin.command:
+        cmd: kubectl version --output=yaml
+      register: result
+      changed_when: result is not succeeded
+
     - name: include role
       ansible.builtin.include_role:
         name: alvistack.kube_addon_manager
-      tags: alvistack.kube_addon_manager
+
+    - name: include role
+      ansible.builtin.include_role:
+        name: alvistack.kube_flannel
 
     - name: include role
       ansible.builtin.include_role:
         name: alvistack.ceph_common
-      tags: alvistack.ceph_common
 
     - name: fetch ceph client.admin key
       ansible.builtin.shell:
@@ -75,11 +83,9 @@
       delegate_to: "{{ groups['ceph_mon'][0] }}"
       register: ceph_client_admin_result
       changed_when: ceph_client_admin_result is not succeeded
-      tags: alvistack.kube_csi_rbd
 
     - name: include role
       ansible.builtin.include_role:
         name: alvistack.kube_csi_rbd
       vars:
         kube_csi_rbd_admin_secret: "{{ ceph_client_admin_result.stdout }}"
-      tags: alvistack.kube_csi_rbd
