@@ -71,6 +71,7 @@
     group: "{{ item.group | default('root') }}"
     mode: "{{ item.mode | default('0644') }}"
   loop:
+    - { dest: "/etc/kubernetes/addons/00-csi-snapshotter.yml" }
     - { dest: "/etc/kubernetes/addons/70-csi-rbd.yml" }
 
 - name: prepare files
@@ -81,4 +82,5 @@
     mode: "{{ item.mode | default('0644') }}"
     state: "{{ item.state | default('file') }}"
   loop:
+    - { dest: "/etc/kubernetes/addons/00-csi-snapshotter.yml" }
     - { dest: "/etc/kubernetes/addons/70-csi-rbd.yml" }
