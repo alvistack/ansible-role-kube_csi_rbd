@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # ClusterID is used for unique identification.
-kube_csi_rbd_cluster_id: "ceph"
+kube_csi_rbd_cluster_id: ceph
 
 # Ceph monitors.
 kube_csi_rbd_monitors: >-
@@ -27,22 +27,21 @@ kube_csi_rbd_monitors: >-
   {{ _ns._params | join(',') }}
 
 # Ceph admin id.
-kube_csi_rbd_admin_id: "admin"
+kube_csi_rbd_admin_id: admin
 
 # Ceph admin secret.
-kube_csi_rbd_admin_secret: ~
-
+kube_csi_rbd_admin_secret:
 # Ceph pool into which the RBD image shall be created.
-kube_csi_rbd_pool: "rbd"
+kube_csi_rbd_pool: rbd
 
 # RBD image features, CSI creates image with image-format 2 CSI RBD
 # currently supports `layering`, `journaling`, `exclusive-lock`,
 # `object-map`, `fast-diff`, `deep-flatten` features.
-kube_csi_rbd_image_features: "layering"
+kube_csi_rbd_image_features: layering
 
 # If set to rbd-nbd, use rbd-nbd on nodes that have rbd-nbd and nbd kernel
 # modules to map rbd images.
-kube_csi_rbd_mounter: "rbd"
+kube_csi_rbd_mounter: rbd
 
 # /etc/ceph-csi-config/config.json.
 kube_csi_rbd_config:
@@ -51,13 +50,13 @@ kube_csi_rbd_config:
 
 # StorageClass parameters.
 kube_csi_rbd_parameters:
-  csi.storage.k8s.io/provisioner-secret-name: "csi-rbd-secret"
-  csi.storage.k8s.io/provisioner-secret-namespace: "csi-rbd"
-  csi.storage.k8s.io/controller-expand-secret-name: "csi-rbd-secret"
-  csi.storage.k8s.io/controller-expand-secret-namespace: "csi-rbd"
-  csi.storage.k8s.io/node-stage-secret-name: "csi-rbd-secret"
-  csi.storage.k8s.io/node-stage-secret-namespace: "csi-rbd"
-  csi.storage.k8s.io/fstype: "ext4"
+  csi.storage.k8s.io/provisioner-secret-name: csi-rbd-secret
+  csi.storage.k8s.io/provisioner-secret-namespace: csi-rbd
+  csi.storage.k8s.io/controller-expand-secret-name: csi-rbd-secret
+  csi.storage.k8s.io/controller-expand-secret-namespace: csi-rbd
+  csi.storage.k8s.io/node-stage-secret-name: csi-rbd-secret
+  csi.storage.k8s.io/node-stage-secret-namespace: csi-rbd
+  csi.storage.k8s.io/fstype: ext4
   clusterID: "{{ kube_csi_rbd_cluster_id }}"
   pool: "{{ kube_csi_rbd_pool }}"
   imageFeatures: "{{ kube_csi_rbd_image_features }}"
