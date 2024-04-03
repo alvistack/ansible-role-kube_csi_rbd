@@ -1,5 +1,3 @@
----
-
 # Copyright 2024 Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+---
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -94,60 +93,182 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
-    resources: ["events"]
-    verbs: ["list", "watch", "create", "update", "patch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims"]
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: [""]
-    resources: ["persistentvolumeclaims/status"]
-    verbs: ["update", "patch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["storageclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["snapshot.storage.k8s.io"]
-    resources: ["volumesnapshots"]
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - list
+      - watch
+      - create
+      - update
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumes
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims/status
+    verbs:
+      - update
+      - patch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshots
     verbs: ["get", "list", "patch"]
-  - apiGroups: ["snapshot.storage.k8s.io"]
-    resources: ["volumesnapshots/status"]
-    verbs: ["get", "list", "patch"]
-  - apiGroups: ["snapshot.storage.k8s.io"]
-    resources: ["volumesnapshotcontents"]
-    verbs: ["create", "get", "list", "watch", "update", "delete", "patch"]
-  - apiGroups: ["snapshot.storage.k8s.io"]
-    resources: ["volumesnapshotclasses"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update", "patch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments/status"]
-    verbs: ["patch"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["csinodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: ["snapshot.storage.k8s.io"]
-    resources: ["volumesnapshotcontents/status"]
-    verbs: ["update", "patch"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts/token"]
-    verbs: ["create"]
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+      - create
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshots/status
+    verbs:
+      - get
+      - list
+      - patch
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshotcontents
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - update
+      - delete
+      - patch
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshotclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - volumeattachments
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - volumeattachments/status
+    verbs:
+      - patch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - csinodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - snapshot.storage.k8s.io
+    resources:
+      - volumesnapshotcontents/status
+    verbs:
+      - update
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
+  - apiGroups:
+      - groupsnapshot.storage.k8s.io
+    resources:
+      - volumegroupsnapshotclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - groupsnapshot.storage.k8s.io
+    resources:
+      - volumegroupsnapshotcontents
+    verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  - apiGroups:
+      - groupsnapshot.storage.k8s.io
+    resources:
+      - volumegroupsnapshotcontents/status
+    verbs:
+      - update
+      - patch
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -178,12 +299,28 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get", "list", "watch", "create", "update", "delete"]
-  - apiGroups: ["coordination.k8s.io"]
-    resources: ["leases"]
-    verbs: ["get", "watch", "list", "delete", "update", "create"]
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
+  - apiGroups:
+      - coordination.k8s.io
+    resources:
+      - leases
+    verbs:
+      - get
+      - watch
+      - list
+      - delete
+      - update
+      - create
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -225,27 +362,49 @@ metadata:
     app.kubernetes.io/part-of: csi-rbd
     addonmanager.kubernetes.io/mode: Reconcile
 rules:
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["configmaps"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts"]
-    verbs: ["get"]
-  - apiGroups: [""]
-    resources: ["persistentvolumes"]
-    verbs: ["get"]
-  - apiGroups: ["storage.k8s.io"]
-    resources: ["volumeattachments"]
-    verbs: ["list", "get"]
-  - apiGroups: [""]
-    resources: ["serviceaccounts/token"]
-    verbs: ["create"]
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumes
+    verbs:
+      - get
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - volumeattachments
+    verbs:
+      - list
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    verbs:
+      - create
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -347,79 +506,12 @@ spec:
                     operator: In
                     values:
                       - csi-rbdplugin-provisioner
-              topologyKey: "kubernetes.io/hostname"
+              topologyKey: kubernetes.io/hostname
       serviceAccountName: csi-rbd-provisioner
       priorityClassName: system-cluster-critical
       containers:
-        - name: csi-provisioner
-          image: registry.k8s.io/sig-storage/csi-provisioner:v3.6.2
-          imagePullPolicy: IfNotPresent
-          args:
-            - --csi-address=$(ADDRESS)
-            - --v=1
-            - --timeout=150s
-            - --retry-interval-start=500ms
-            - --leader-election=true
-            - --feature-gates=Topology=false
-            - --feature-gates=HonorPVReclaimPolicy=true
-            - --prevent-volume-mode-conversion=true
-            - --default-fstype=ext4
-            - --extra-create-metadata=false
-          env:
-            - name: ADDRESS
-              value: unix:///csi/csi-provisioner.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
-        - name: csi-snapshotter
-          image: registry.k8s.io/sig-storage/csi-snapshotter:v6.3.2
-          imagePullPolicy: IfNotPresent
-          args:
-            - --csi-address=$(ADDRESS)
-            - --v=1
-            - --timeout=150s
-            - --leader-election=true
-            - --extra-create-metadata=false
-          env:
-            - name: ADDRESS
-              value: unix:///csi/csi-provisioner.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
-        - name: csi-attacher
-          image: registry.k8s.io/sig-storage/csi-attacher:v4.4.2
-          imagePullPolicy: IfNotPresent
-          args:
-            - --v=1
-            - --csi-address=$(ADDRESS)
-            - --leader-election=true
-            - --retry-interval-start=500ms
-            - --default-fstype=ext4
-          env:
-            - name: ADDRESS
-              value: /csi/csi-provisioner.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
-        - name: csi-resizer
-          image: registry.k8s.io/sig-storage/csi-resizer:v1.9.2
-          imagePullPolicy: IfNotPresent
-          args:
-            - --csi-address=$(ADDRESS)
-            - --v=1
-            - --timeout=150s
-            - --leader-election
-            - --retry-interval-start=500ms
-            - --handle-volume-inuse-error=false
-            - --feature-gates=RecoverVolumeExpansionFailure=true
-          env:
-            - name: ADDRESS
-              value: unix:///csi/csi-provisioner.sock
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
         - name: csi-rbdplugin
-          image: quay.io/cephcsi/cephcsi:v3.10.2
+          image: quay.io/cephcsi/cephcsi:v3.11.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -454,12 +546,12 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
-            - name: host-dev
-              mountPath: /dev
-            - name: host-sys
-              mountPath: /sys
-            - name: lib-modules
-              mountPath: /lib/modules
+            - mountPath: /dev
+              name: host-dev
+            - mountPath: /sys
+              name: host-sys
+            - mountPath: /lib/modules
+              name: lib-modules
               readOnly: true
             - name: ceph-csi-config
               mountPath: /etc/ceph-csi-config
@@ -470,8 +562,76 @@ spec:
             - name: oidc-token
               mountPath: /run/secrets/tokens
               readOnly: true
+        - name: csi-provisioner
+          image: registry.k8s.io/sig-storage/csi-provisioner:v4.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --csi-address=$(ADDRESS)
+            - --v=1
+            - --timeout=150s
+            - --retry-interval-start=500ms
+            - --leader-election=true
+            - --feature-gates=Topology=false
+            - --feature-gates=HonorPVReclaimPolicy=true
+            - --prevent-volume-mode-conversion=true
+            - --default-fstype=ext4
+            - --extra-create-metadata=false
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi-provisioner.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-snapshotter
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v7.0.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --csi-address=$(ADDRESS)
+            - --v=1
+            - --timeout=150s
+            - --leader-election=true
+            - --extra-create-metadata=false
+            - --enable-volume-group-snapshots=true
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi-provisioner.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-attacher
+          image: registry.k8s.io/sig-storage/csi-attacher:v4.5.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --v=1
+            - --csi-address=$(ADDRESS)
+            - --leader-election=true
+            - --retry-interval-start=500ms
+            - --default-fstype=ext4
+          env:
+            - name: ADDRESS
+              value: /csi/csi-provisioner.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-resizer
+          image: registry.k8s.io/sig-storage/csi-resizer:v1.10.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --csi-address=$(ADDRESS)
+            - --v=1
+            - --timeout=150s
+            - --leader-election
+            - --retry-interval-start=500ms
+            - --handle-volume-inuse-error=false
+            - --feature-gates=RecoverVolumeExpansionFailure=true
+          env:
+            - name: ADDRESS
+              value: unix:///csi/csi-provisioner.sock
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
         - name: csi-rbdplugin-controller
-          image: quay.io/cephcsi/cephcsi:v3.10.2
+          image: quay.io/cephcsi/cephcsi:v3.11.0
           args:
             - --type=controller
             - --v=5
@@ -486,13 +646,13 @@ spec:
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: ceph-csi-config
-              mountPath: /etc/ceph-csi-config/
+              mountPath: /etc/ceph-csi-config
             - name: keys-tmp-dir
               mountPath: /tmp/csi/keys
             - name: ceph-config
               mountPath: /etc/ceph
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.10.2
+          image: quay.io/cephcsi/cephcsi:v3.11.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -591,38 +751,19 @@ spec:
       hostPID: true
       dnsPolicy: ClusterFirstWithHostNet
       containers:
-        - name: driver-registrar
-          securityContext:
-            privileged: true
-            allowPrivilegeEscalation: true
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.9.1
-          imagePullPolicy: IfNotPresent
-          args:
-            - --v=1
-            - --csi-address=/csi/csi.sock
-            - --kubelet-registration-path=/var/lib/kubelet/plugins/rbd.csi.ceph.com/csi.sock
-          env:
-            - name: KUBE_NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          volumeMounts:
-            - name: socket-dir
-              mountPath: /csi
-            - name: registration-dir
-              mountPath: /registration
         - name: csi-rbdplugin
           securityContext:
             privileged: true
             capabilities:
-              add: ["SYS_ADMIN"]
+              add:
+                - SYS_ADMIN
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.10.2
+          image: quay.io/cephcsi/cephcsi:v3.11.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
             - --pluginpath=/var/lib/kubelet/plugins
-            - --stagingpath=/var/lib/kubelet/plugins/kubernetes.io/csi/
+            - --stagingpath=/var/lib/kubelet/plugins/kubernetes.io/csi
             - --type=rbd
             - --nodeserver=true
             - --endpoint=$(CSI_ENDPOINT)
@@ -679,11 +820,31 @@ spec:
             - name: oidc-token
               mountPath: /run/secrets/tokens
               readOnly: true
+        - name: driver-registrar
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.10.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --v=1
+            - --csi-address=/csi/csi.sock
+            - --kubelet-registration-path=/var/lib/kubelet/plugins/rbd.csi.ceph.com/csi.sock
+          env:
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
         - name: liveness-prometheus
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.10.2
+          image: quay.io/cephcsi/cephcsi:v3.11.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
