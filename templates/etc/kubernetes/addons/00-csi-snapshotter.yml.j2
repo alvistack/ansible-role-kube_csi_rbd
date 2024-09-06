@@ -1151,7 +1151,7 @@ metadata:
   name: snapshot-controller
   namespace: kube-system
   labels:
-    app.kubernetes.io/name: csi-snapshotter
+    app.kubernetes.io/name: snapshot-controller
     app.kubernetes.io/part-of: csi-snapshotter
     addonmanager.kubernetes.io/mode: Reconcile
 spec:
@@ -1173,8 +1173,8 @@ spec:
       serviceAccountName: snapshot-controller
       containers:
         - name: snapshot-controller
-          image: registry.k8s.io/sig-storage/snapshot-controller:v8.0.1
+          image: registry.k8s.io/sig-storage/snapshot-controller:v8.1.0
+          imagePullPolicy: IfNotPresent
           args:
             - --v=5
             - --leader-election=true
-          imagePullPolicy: IfNotPresent
