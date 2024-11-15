@@ -2,6 +2,7 @@
 
 ## 11.0.0 - TBC
 
+- Support Ansible community package 11.0.0
 - Support Ceph 19.2 Squid
 
 ## 10.6.0 - 2024-11-09
@@ -17,7 +18,6 @@
 ## 10.4.0 - 2024-09-11
 
 - Support Ansible community package 10.4.0
-
 - Support Kubernetes 1.30
 
 ## 10.3.0 - 2024-08-18
