@@ -511,7 +511,7 @@ spec:
       priorityClassName: system-cluster-critical
       containers:
         - name: csi-rbdplugin
-          image: quay.io/cephcsi/cephcsi:v3.12.3
+          image: quay.io/cephcsi/cephcsi:v3.13.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -575,9 +575,19 @@ spec:
             - --prevent-volume-mode-conversion=true
             - --default-fstype=ext4
             - --extra-create-metadata=false
+            - --immediate-topology=false
+            - --http-endpoint=$(POD_IP):8090
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - containerPort: 8090
+              name: http-endpoint
+              protocol: TCP
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -591,9 +601,18 @@ spec:
             - --leader-election=true
             - --extra-create-metadata=false
             - --enable-volume-group-snapshots=true
+            - --http-endpoint=$(POD_IP):8092
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - containerPort: 8092
+              name: http-endpoint
+              protocol: TCP
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -606,9 +625,18 @@ spec:
             - --leader-election=true
             - --retry-interval-start=500ms
             - --default-fstype=ext4
+            - --http-endpoint=$(POD_IP):8093
           env:
             - name: ADDRESS
               value: /csi/csi-provisioner.sock
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - containerPort: 8093
+              name: http-endpoint
+              protocol: TCP
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -623,14 +651,23 @@ spec:
             - --retry-interval-start=500ms
             - --handle-volume-inuse-error=false
             - --feature-gates=RecoverVolumeExpansionFailure=true
+            - --http-endpoint=$(POD_IP):8091
           env:
             - name: ADDRESS
               value: unix:///csi/csi-provisioner.sock
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - containerPort: 8091
+              name: http-endpoint
+              protocol: TCP
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
         - name: csi-rbdplugin-controller
-          image: quay.io/cephcsi/cephcsi:v3.12.3
+          image: quay.io/cephcsi/cephcsi:v3.13.0
           args:
             - --type=controller
             - --v=5
@@ -651,7 +688,7 @@ spec:
             - name: ceph-config
               mountPath: /etc/ceph
         - name: liveness-prometheus
-          image: quay.io/cephcsi/cephcsi:v3.12.3
+          image: quay.io/cephcsi/cephcsi:v3.13.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
@@ -667,6 +704,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+          ports:
+            - containerPort: 8680
+              name: http-metrics
+              protocol: TCP
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
@@ -757,7 +798,7 @@ spec:
               add:
                 - SYS_ADMIN
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.12.3
+          image: quay.io/cephcsi/cephcsi:v3.13.0
           imagePullPolicy: IfNotPresent
           args:
             - --nodeid=$(NODE_ID)
@@ -843,7 +884,7 @@ spec:
           securityContext:
             privileged: true
             allowPrivilegeEscalation: true
-          image: quay.io/cephcsi/cephcsi:v3.12.3
+          image: quay.io/cephcsi/cephcsi:v3.13.0
           imagePullPolicy: IfNotPresent
           args:
             - --type=liveness
