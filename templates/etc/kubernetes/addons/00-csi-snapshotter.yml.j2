@@ -1028,6 +1028,7 @@ rules:
     resources:
       - volumesnapshots
     verbs:
+      - create
       - get
       - list
       - watch
@@ -1173,7 +1174,7 @@ spec:
       serviceAccountName: snapshot-controller
       containers:
         - name: snapshot-controller
-          image: registry.k8s.io/sig-storage/snapshot-controller:v8.1.0
+          image: registry.k8s.io/sig-storage/snapshot-controller:v8.2.0
           imagePullPolicy: IfNotPresent
           args:
             - --v=5
